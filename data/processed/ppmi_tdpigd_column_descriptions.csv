@@ -1,0 +1,76 @@
+column,description
+LABEL,TD / PIGD / Indeterminate — the target (Y)
+LABEL_FLIPPED_NEXT,Whether the label changes at the next visit (transition target)
+MONTHS_TO_NEXT_VISIT,Interval to next visit
+NEXT_LABEL,Label at the following visit (transition target)
+NEXT_VISIT_MONTH,Month of the following visit
+PIGD_SCORE,Mean of the 5 gait/balance items (Y component)
+TD_PIGD_RATIO,Tremor / PIGD ratio (Y component)
+TREMOR_SCORE,Mean of the 11 tremor items (Y component)
+AGE_AT_VISIT,Age at visit
+ESS_TOTAL,Epworth Sleepiness Scale item sum
+GDS_TOTAL,Geriatric Depression Scale item sum
+GENETIC_COHORT,Recruited into the genetic cohort (see limitation below)
+HANDED,Handedness
+LEDD_TOTAL_MG,Levodopa-equivalent daily dose (date-interval join)
+MCATOT,MoCA total
+NP1PTOT,MDS-UPDRS Part I total (self-completed)
+NP1RTOT,MDS-UPDRS Part I total (rater-completed)
+NP2DRES,Dressing
+NP2EAT,Eating tasks
+NP2HOBB,Hobbies and other activities
+NP2HWRT,Handwriting
+NP2HYGN,Hygiene
+NP2RISE,"Getting out of a bed, car or deep chair"
+NP2SALV,Saliva and drooling
+NP2SPCH,Speech
+NP2SWAL,Chewing and swallowing
+NP2TURN,Turning in bed
+N_CONMEDS,Count of active concomitant medications
+PDTRTMNT,On PD treatment at this visit
+RBDSQ_TOTAL,REM Sleep Behaviour Disorder screening item sum
+SCOPA_AUT_TOTAL,SCOPA-AUT item sum
+SEX,Sex
+STAI_TOTAL,State-Trait Anxiety Inventory item sum
+YRS_SINCE_DIAGNOSIS,Years since diagnosis (derived)
+YRS_SINCE_SYMPTOM_ONSET,Years since symptom onset (derived)
+NHY,Hoehn & Yahr stage — stage 3 is defined by postural instability
+NP2FREZ,Freezing (self-reported)
+NP2PTOT,Part II total — contains the 3 items above
+NP2TRMR,Tremor (self-reported)
+NP2WALK,Walking and balance (self-reported)
+NP3FRZGT,Freezing of gait
+NP3GAIT,Gait
+NP3KTRML,"Kinetic tremor, left hand"
+NP3KTRMR,"Kinetic tremor, right hand"
+NP3PSTBL,Postural stability
+NP3PTRML,"Postural tremor, left hand"
+NP3PTRMR,"Postural tremor, right hand"
+NP3RTALJ,"Rest tremor amplitude, lip/jaw"
+NP3RTALL,"Rest tremor amplitude, left lower limb"
+NP3RTALU,"Rest tremor amplitude, left upper limb"
+NP3RTARL,"Rest tremor amplitude, right lower limb"
+NP3RTARU,"Rest tremor amplitude, right upper limb"
+NP3RTCON,Constancy of rest tremor
+NP3TOT,Part III total — contains the 13 items above
+APOE,APOE genotype
+CAUDATE_REF_CWM,DaTscan caudate binding ratio
+DATSCAN_VISINTRP,DaTscan visual read
+GBA,GBA variant status
+LRRK2,LRRK2 variant status
+PARK7,PARK7 variant status
+PINK1,PINK1 variant status
+PRKN,PRKN variant status
+PUTAMEN_REF_CWM,DaTscan putamen binding ratio
+SNCA,SNCA variant status
+STRIATUM_REF_CWM,DaTscan striatum binding ratio
+VPS35,VPS35 variant status
+EVENT_ID,PPMI visit code
+INFODT,Visit date
+PATNO,Patient identifier
+VISIT_MONTH,Months since baseline (derived)
+APPRDX,PPMI diagnostic sub-code
+COHORT,PPMI cohort code
+PDDXDT,Diagnosis date (source)
+PDSTATE_USED,Medication state of the retained Part III record
+SXDT,Symptom onset date (source)

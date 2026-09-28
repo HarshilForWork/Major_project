@@ -1,4 +1,4 @@
-.PHONY: help setup preprocess baseline xgboost ablation sporadic figures test all clean
+.PHONY: help setup preprocess baseline xgboost ablation sporadic figures docs test all clean
 
 PY := python
 
@@ -10,6 +10,7 @@ help:
 	@echo "ablation    feature-group ablation study"
 	@echo "sporadic    hardest test: sporadic PD, baseline visit only"
 	@echo "figures     regenerate every figure in reports/figures"
+	@echo "docs        regenerate docs/data_dictionary.md from the processed data"
 	@echo "test        run the test suite"
 	@echo "all         preprocess -> baseline -> xgboost -> ablation -> figures"
 
@@ -38,10 +39,13 @@ figures:
 	$(PY) src/trace_pd/viz/gap_chart.py
 	$(PY) src/trace_pd/viz/impact_diagram.py
 
+docs:
+	$(PY) src/trace_pd/data/export_dictionary.py
+
 test:
 	$(PY) -m pytest tests -v
 
-all: preprocess baseline xgboost ablation sporadic figures
+all: preprocess baseline xgboost ablation sporadic figures docs
 
 clean:
 	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
