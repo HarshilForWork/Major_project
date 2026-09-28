@@ -1,0 +1,76 @@
+column,role,source_table,pct_present,dtype
+LABEL,Y - target,Computed (Stebbins formula),83.0,object
+LABEL_FLIPPED_NEXT,Y - target,Computed (next-visit shift),71.0,float64
+MONTHS_TO_NEXT_VISIT,Y - target,Computed (next-visit shift),93.7,float64
+NEXT_LABEL,Y - target,Computed (next-visit shift),76.6,object
+NEXT_VISIT_MONTH,Y - target,Computed (next-visit shift),93.7,float64
+PIGD_SCORE,Y - target,Computed (Stebbins formula),83.0,float64
+TD_PIGD_RATIO,Y - target,Computed (Stebbins formula),81.0,float64
+TREMOR_SCORE,Y - target,Computed (Stebbins formula),83.0,float64
+AGE_AT_VISIT,X - predictor,Age at Visit,99.6,float64
+ESS_TOTAL,X - predictor,Epworth (item sum),66.9,float64
+GDS_TOTAL,X - predictor,GDS-15 (item sum),66.7,float64
+GENETIC_COHORT,X - predictor,Derived (Subject Cohort History),100.0,float64
+HANDED,X - predictor,Demographics,100.0,float64
+LEDD_TOTAL_MG,X - predictor,LEDD Med Log (date interval),91.8,float64
+MCATOT,X - predictor,MoCA,52.3,float64
+NP1PTOT,X - predictor,MDS-UPDRS Part I (self-completed),92.0,float64
+NP1RTOT,X - predictor,MDS-UPDRS Part I,92.1,float64
+NP2DRES,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2EAT,X - predictor,MDS-UPDRS Part II,91.9,float64
+NP2HOBB,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2HWRT,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2HYGN,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2RISE,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2SALV,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2SPCH,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2SWAL,X - predictor,MDS-UPDRS Part II,92.0,float64
+NP2TURN,X - predictor,MDS-UPDRS Part II,92.0,float64
+N_CONMEDS,X - predictor,Concomitant Med Log (date interval),91.8,float64
+PDTRTMNT,X - predictor,MDS-UPDRS Part III,91.8,float64
+RBDSQ_TOTAL,X - predictor,RBD Screening (item sum),66.9,float64
+SCOPA_AUT_TOTAL,X - predictor,SCOPA-AUT (item sum),66.8,float64
+SEX,X - predictor,Demographics,100.0,float64
+STAI_TOTAL,X - predictor,STAI (item sum),66.6,float64
+YRS_SINCE_DIAGNOSIS,X - predictor,Derived (PD Diagnosis History + visit date),91.8,float64
+YRS_SINCE_SYMPTOM_ONSET,X - predictor,Derived (PD Diagnosis History + visit date),90.8,float64
+NHY,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP2FREZ,Excluded - defines Y,MDS-UPDRS Part II,91.9,float64
+NP2PTOT,Excluded - defines Y,MDS-UPDRS Part II,91.8,float64
+NP2TRMR,Excluded - defines Y,MDS-UPDRS Part II,92.0,float64
+NP2WALK,Excluded - defines Y,MDS-UPDRS Part II,91.9,float64
+NP3FRZGT,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3GAIT,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3KTRML,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3KTRMR,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3PSTBL,Excluded - defines Y,MDS-UPDRS Part III,83.2,float64
+NP3PTRML,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3PTRMR,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3RTALJ,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3RTALL,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3RTALU,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3RTARL,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3RTARU,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3RTCON,Excluded - defines Y,MDS-UPDRS Part III,83.4,float64
+NP3TOT,Excluded - defines Y,MDS-UPDRS Part III,81.5,float64
+APOE,Excluded - optional,IU Genetic Consensus,99.2,object
+CAUDATE_REF_CWM,Excluded - optional,Xing Core Lab Quant SBR,12.6,float64
+DATSCAN_VISINTRP,Excluded - optional,Xing Core Lab Visual Read,95.2,object
+GBA,Excluded - optional,IU Genetic Consensus,99.1,object
+LRRK2,Excluded - optional,IU Genetic Consensus,99.1,object
+PARK7,Excluded - optional,IU Genetic Consensus,99.1,object
+PINK1,Excluded - optional,IU Genetic Consensus,99.1,object
+PRKN,Excluded - optional,IU Genetic Consensus,99.1,object
+PUTAMEN_REF_CWM,Excluded - optional,Xing Core Lab Quant SBR,12.6,float64
+SNCA,Excluded - optional,IU Genetic Consensus,99.2,object
+STRIATUM_REF_CWM,Excluded - optional,Xing Core Lab Quant SBR,12.6,float64
+VPS35,Excluded - optional,IU Genetic Consensus,99.1,object
+EVENT_ID,Excluded - key,Join key (all tables),100.0,object
+INFODT,Excluded - key,MDS-UPDRS Part III,91.8,object
+PATNO,Excluded - key,Join key (all tables),100.0,int64
+VISIT_MONTH,Excluded - key,Derived (EVENT_ID),100.0,int64
+APPRDX,Excluded - admin,Subject Cohort History,100.0,float64
+COHORT,Excluded - admin,Subject Cohort History,100.0,float64
+PDDXDT,Excluded - admin,PD Diagnosis History,100.0,object
+PDSTATE_USED,Excluded - admin,MDS-UPDRS Part III,72.5,object
+SXDT,Excluded - admin,PD Diagnosis History,98.9,object

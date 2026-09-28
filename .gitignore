@@ -1,11 +1,8 @@
 # ---------------------------------------------------------------- data
-# PPMI data is governed by a Data Use Agreement and must NOT be redistributed.
-# Obtain it yourself from https://ida.loni.usc.edu  (see data/README.md)
-data/raw/
-data/interim/
-data/processed/
-!data/**/.gitkeep
-!data/README.md
+# PPMI data is DUA-restricted. It is committed here deliberately --
+# keep this repository PRIVATE.
+data/interim/*
+!data/interim/.gitkeep
 
 # trained artifacts
 models/*

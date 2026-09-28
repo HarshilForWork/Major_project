@@ -65,7 +65,7 @@ plausible proxy leakage and are disclosed rather than defended.
 trace-pd/
 ├── configs/
 │   └── config.yaml                 cohort, label cutoffs, CV and leakage policy
-├── data/                           git-ignored — PPMI DUA, see data/README.md
+├── data/                           PPMI extract — DUA-restricted, keep repo private
 │   ├── raw/ppmi_csv/               23 source CSVs from LONI IDA
 │   ├── raw/zips_as_downloaded/     original archives, unmodified
 │   └── processed/                  ppmi_tdpigd_long.csv (6,922 × 75) + dictionary
@@ -101,7 +101,6 @@ trace-pd/
 ```bash
 pip install -r requirements.txt
 
-# place the PPMI extract in data/raw/ppmi_csv/ first — see data/README.md
 make preprocess     # → data/processed/ppmi_tdpigd_long.csv
 make baseline       # → reports/metrics/baseline_model_results.txt
 make xgboost        # → reports/metrics/baseline_model_results_xgb.txt
@@ -183,9 +182,9 @@ full intended system; only layers 1 and 2 exist today.
 
 ## Data use
 
-PPMI data are governed by a Data Use Agreement and are **not redistributable**. `data/` is
-git-ignored and this repository contains no patient-level data. Obtain access at
-<https://ida.loni.usc.edu>.
+PPMI data are governed by a Data Use Agreement and are **not redistributable**. This
+repository includes the PPMI extract under `data/` and must therefore stay **private**,
+shared only with people covered by the DUA. Access: <https://ida.loni.usc.edu>.
 
 ---
 

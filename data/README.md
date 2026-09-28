@@ -8,10 +8,9 @@ Extract date: **16 August 2026**, 19 source tables.
 
 ## Licence and redistribution
 
-PPMI data are released under a **Data Use Agreement**. They are *not* redistributable.
-`data/` is therefore excluded from version control in `.gitignore`, and the repository
-contains no patient-level data. Anyone reproducing this work must request access to
-PPMI themselves and place the downloaded CSVs in `data/raw/ppmi_csv/`.
+PPMI data are released under a **Data Use Agreement** and are *not* redistributable.
+The extract is committed to this repository for the project team's convenience, so the
+repository must remain **private** and shared only with people covered by the DUA.
 
 ## Layout
 
