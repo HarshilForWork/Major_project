@@ -217,16 +217,15 @@ features by bucket, never by hand.
 
 | Bucket | n cols | Usable as model input? |
 |---|---|---|
-| `BANNED_LABEL_DEFINING` | 16 | **Never** |
-| `FORMULA_PART2_PATIENT_REPORTED` | 3 | Variant A only |
+| `BANNED_LABEL_DEFINING` | 19 | **Never** (16 formula items + 3 indirect encoders) |
 | `CHEAP_FEATURE` | 27 | Yes — core input set |
 | `RESOURCE_DEPENDENT_FEATURE` | 12 | Separate variant only |
 | `TARGET` | 8 | No (outcomes) |
 | `KEY` / `ADMIN` | 9 | No |
 
-### `BANNED_LABEL_DEFINING` (16 columns)
+### `BANNED_LABEL_DEFINING` (19 columns)
 
-The 13 Part III formula items, plus three columns that encode the same
+The 16 formula items (13 Part III + 3 Part II), plus three columns that encode the same
 information indirectly:
 
 - **`NP3TOT`** — the Part III total sums the tremor and gait items into itself
@@ -237,7 +236,13 @@ information indirectly:
 The script asserts that no banned column is ever tagged as a feature; the run log
 records `Leakage guard: PASSED`.
 
-### The Variant A / Variant B decision (unresolved — needs your call)
+### The Variant A / Variant B decision
+
+> **Resolved 10 Sep 2026 → strict policy (Variant B).** No column that participates
+> in computing Y may be used for training. The three Part II formula items below
+> were moved into `BANNED_LABEL_DEFINING`, which now holds **19** columns
+> (16 formula items + `NP3TOT`, `NP2PTOT`, `NHY`). The text below is kept as the
+> record of the options that were considered.
 
 The three Part II items (`NP2TRMR`, `NP2WALK`, `NP2FREZ`) are patient-reported *and*
 contribute to the label formula — 1 of 11 tremor items, and 2 of 5 PIGD items.

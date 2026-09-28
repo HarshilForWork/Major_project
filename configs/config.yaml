@@ -28,7 +28,7 @@ label:
 leakage:
   policy: strict
   # No column that participates in computing Y may be used for training.
-  n_banned_columns: 16
+  n_banned_columns: 19            # 16 formula items + NP3TOT, NP2PTOT, NHY
   enforced_by: feature registry + runtime assertion in preprocess.py
 
 validation:
