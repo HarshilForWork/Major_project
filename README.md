@@ -16,7 +16,7 @@ which columns go into the model and which were kept out, and what the results ac
 ## Contents
 
 1. [The problem in plain words](#1-the-problem-in-plain-words)
-2. [Why predict something a formula already computes?](#2-why-predict-something-a-formula-already-computes)
+2. [Why predict something a formula already computes?](#2-why-predict-something-a-formula-already-computes) — incl. clinical-need evidence and literature gap
 3. [How we got here — project history](#3-how-we-got-here--project-history)
 4. [Data](#4-data)
 5. [The label (Y)](#5-the-label-y)
@@ -30,6 +30,8 @@ which columns go into the model and which were kept out, and what the results ac
 13. [Status](#13-status)
 14. [Limitations](#14-limitations)
 15. [Data use](#15-data-use)
+16. [Deliverables and what changed](#16-deliverables-and-what-changed)
+17. [What is intentionally not in this repo](#17-what-is-intentionally-not-in-this-repo)
 
 ---
 
@@ -85,6 +87,51 @@ measuring nothing it didn't already have (§9.4).
 It also defines what the tool is for in practice: **triage**. If the model is confident, the
 clinician can plan around that subtype. If it's uncertain, that is the signal to do the full
 motor exam **now** instead of waiting another visit.
+
+### 2.1 Is there a real clinical need? — the evidence
+
+The whole project depends on the full motor exam **not** being routinely done. We checked
+that assumption against published evidence. Full write-up with sources:
+[`docs/clinical_need.md`](docs/clinical_need.md).
+
+| Setting | Evidence |
+|---|---|
+| **Everywhere** | MDS-UPDRS is 50 items / ~30 min, needs a certified rater (MDS certificate programme; Part III training alone ~2 h), and is "not always administered at every clinical visit" — typically every 6–12 months, mostly in research cohorts |
+| **India** (survey of 267 clinicians, 23 states) | only **12.6%** of initial diagnoses are made by a movement-disorder specialist; specialists are "rarely accessible locally" for **79.2%**; 92.1% of respondents are urban |
+| **India — imaging / genetics** | **94.4%** rarely advise DaTscan and **94.9%** rarely advise genetic testing — so these are *more* scarce than the exam, which is why they're held out of X (§6.3) |
+| **UK** | NICE NG71 says review every 6–12 months. That's a review *frequency*, not a full item-level MDS-UPDRS at each contact |
+
+**The objection we had to face.** PPMI **does** the full exam at every visit, by protocol.
+That's why we can train (every visit has ground truth), but it also means "predict earlier"
+only makes sense outside PPMI. The claim we can defend is narrower:
+
+> *In settings where the full exam isn't done, estimate what it would say — and say how much
+> to trust that estimate.*
+
+**Gap in the argument:** no source gives a direct figure for "% of routine PD visits with a
+complete item-level MDS-UPDRS". The case is assembled from adjacent evidence — burden,
+certification, specialist scarcity, guideline wording — and should be presented that way.
+
+### 2.2 What existing work misses
+
+Seven recent papers, reviewed in the first-review deck. Citations are verified and each paper's
+gap is set out in [`docs/literature_review.md`](docs/literature_review.md).
+
+| # | Paper | Gap it leaves |
+|---|---|---|
+| 1 | Diaz-Rincon et al. 2026, *CASCADE* conformal (arXiv) | PD **medication dosing**, not subtype; single visit |
+| 2 | Kristoffersen et al. 2026, 7T MRI subtypes (arXiv) | needs **7T MRI**; no calibrated confidence |
+| 3 | Modi et al. 2026, LLM reasoning variability (medRxiv) | shows LLM accuracy can swing **>50%** on prompt format — why our LLM decides nothing |
+| 4 | Yeh et al. 2026, ML risk + SHAP + LLM (*ICM Experimental*) | ICU, not PD; no confidence; SHAP explains one prediction, not change |
+| 5 | Sreenivasan et al. 2025, conformal in MS (*npj Digit Med*) | MS, not PD; no transition framing |
+| 6 | Hui et al. 2025, DL + radiomics subtypes (*Front Neurol*) | same-visit **MRI**; no confidence |
+| 7 | Tassopoulou et al. 2025, conformal bands (NeurIPS) | Alzheimer's biomarker, not a PD subtype label |
+
+**The gap.** Subtype classifiers need imaging and report no per-patient confidence. The
+conformal work isn't about PD subtype. Nothing handles the **longitudinal** instability of the
+label — which reclassifies a third to half of patients within 1–2 years — or explains *why*
+confidence changed between visits. TRACE-PD's design targets all five. Only the imaging-free
+subtype classifier is built so far (§13).
 
 ---
 
@@ -184,6 +231,26 @@ it is the biggest single reason the sample grew.
 | Duplicate `PATNO + EVENT_ID` | 0 — asserted in code |
 | Class balance (all visits) | TD 52.6% · PIGD 36.6% · Indeterminate 10.8% |
 | Class balance (baseline) | TD 60.7% · PIGD 27.9% · Indeterminate 11.4% |
+
+**Why long format.** The label is computed per visit, and the flip target needs consecutive
+visits of the same patient. Per-round **wide** tables — one row per patient with a suffixed
+copy of the features for each included visit, plus between-visit deltas — are built downstream
+from this table.
+
+**Round structure** — patients with a computable label at **every** included visit:
+
+| Round | Visits | Patients |
+|---|---|---|
+| 1 | BL | **438** |
+| 2 | BL + 6 mo | 349 |
+| 3 | BL + 6 + 12 mo | 323 |
+| 4 | BL + 6 + 12 + 24 mo | 275 |
+| alt. annual-only | BL + 12 mo | 403 |
+| alt. annual-only | BL + 12 + 24 mo | **343** |
+
+The 6-month visit is the weak link (438 → 349). It's a lighter interim visit in the PPMI
+protocol. An **annual-only** design (BL → 12 → 24 mo) keeps 343 patients at the final round
+instead of 275, with fuller instrument coverage. **Recommended for the round experiments.**
 
 ### 4.5 A bug we found and fixed: medications
 
@@ -286,9 +353,15 @@ a patient's last visit never borrows the next patient's first.
 | Indeterminate | **76.3%** | 545 |
 | **Overall** | **29.1%** | **4,918** |
 
+**Where 4,918 comes from:** 5,742 labelled rows − 223 final visits (no next row) − 601 rows
+whose next visit is unlabelled = 4,918 pairs.
+
 The 29.1% overall rate is consistent with the published "a third to half reclassified within
 1–2 years", which independently suggests the formula was implemented correctly. **355 of 439
 patients (80.9%) change label at least once.**
+
+Full transition design — features, pitfalls, fixed-horizon recommendation:
+[`docs/transition_risk_design.md`](docs/transition_risk_design.md).
 
 ---
 
@@ -578,6 +651,47 @@ The training side forks. The **subtype** model trains on single visits; the **tr
 model trains on visit **pairs** built by the Visit-Pair Builder. Both publish to the Model
 Registry.
 
+### 10.1 How a clinician would use it — visit by visit
+
+**Visit 1 — first time the patient is seen**
+
+1. The clinician does **normal intake**: demographics, history, medications, and whatever
+   questionnaires the clinic already runs (Part II, MoCA, sleep, mood, autonomic). **Not** the
+   full 16-item motor battery.
+2. *Feature Assembly* builds X from the Feature Registry. Banned items are blocked even if
+   present.
+3. *Prediction* → probabilities. *Conformal* → a prediction set.
+4. *Tracker* and *Transition Risk* produce **nothing** yet, because both need a previous visit.
+5. The report shows the set, the features that drove it, and which columns were and weren't
+   used.
+6. Singleton set → a working subtype. Wide set → do the full Part III exam now.
+
+**Visit 2 onward**
+
+1. Same steps, plus the *Tracker* pulls the patient's history: trajectory, confidence curve,
+   stability index.
+2. *Transition Risk* returns P(flip by next visit).
+3. The *Explanation Orchestrator* writes the plain-language version, e.g. *"PIGD; set narrowed
+   from {TD, PIGD}; rising-from-chair worsened; flip risk 14%"*.
+4. The visit is written back to the Patient History Store.
+
+**When the full exam *is* done:** the Label Engine computes the true label. It **overrides**
+the prediction, is stored as ground truth, and feeds the next retraining. The model never
+argues with a completed exam.
+
+> **Today, Visit 1 doesn't work.** Sporadic first-visit prediction is near chance (§9.2). The
+> flow above is the design. It's realistic from Visit 2 onward once the remaining layers are
+> built.
+
+### 10.2 Design documents
+
+| Layer | Document |
+|---|---|
+| Whole system | [`docs/architecture.md`](docs/architecture.md) |
+| Conformal confidence — APS vs LAC, how `q̂` is computed, calibration-size limits | [`docs/conformal_design.md`](docs/conformal_design.md) |
+| Transition risk — `t+1` construction, features, pitfalls | [`docs/transition_risk_design.md`](docs/transition_risk_design.md) |
+| Explanation orchestrator — payload, delta attribution, validator | [`docs/explanation_orchestrator.md`](docs/explanation_orchestrator.md) |
+
 ---
 
 ## 11. Repository layout
@@ -596,7 +710,11 @@ trace-pd/
 ├── docs/
 │   ├── preprocessing_methods.md   full methods, written for the paper
 │   ├── architecture.md            HLD walkthrough
-│   └── clinical_need_evidence_case.pdf
+│   ├── conformal_design.md        APS, q̂, calibration limits
+│   ├── transition_risk_design.md  t+1 construction, features, pitfalls
+│   ├── explanation_orchestrator.md payload, delta attribution, validator
+│   ├── clinical_need.md           is the full exam actually done? (+ PDF)
+│   └── literature_review.md       7 papers, verified citations, gaps
 ├── models/                        trained artifacts (git-ignored)
 ├── notebooks/
 ├── reports/
@@ -693,6 +811,93 @@ label-defining column is a feature** · every label reproduces from its componen
 PPMI data are governed by a **Data Use Agreement** and are **not redistributable**. This
 repository includes the extract under `data/`, so it must stay **private** and be shared only
 with people covered by the DUA. Access: <https://ida.loni.usc.edu>.
+
+---
+
+## 16. Deliverables and what changed
+
+### Paper — `reports/paper/TRACE-PD_paper_draft_v7.docx`
+
+Sections: 1 Introduction · 2 Literature Survey (2.1–2.7 + synthesis) · 3 Problem Description ·
+4 Objective · 5 Data Analysis (5.1–5.10) · 6 System Architecture · 7 References.
+
+**Changes made from Draft-1 to v7:**
+
+- **§5 rebuilt as point-wise with tables**: data source, final dataset, a **75-row column
+  inventory** (column · role · source table · description), why the target changed, the
+  preprocessing pipeline, label definition and verification, leakage control, label
+  instability, consequences for modelling
+- **Removed** a fabricated confidence-curve figure, which showed data we never produced
+- **Removed** all "questionnaire" wording and leftover draft text
+- **Corrected** "21 source tables" → **19**, and dropped MDS-UPDRS Part IV and Clinical
+  Diagnosis from the source list (the pipeline doesn't load them)
+- **Flagged** the original architecture figure, which showed label-defining features flowing
+  into the classifier — the leaky design. The corrected HLD is
+  `reports/figures/fig_HLD_system_architecture`; check that it's the one embedded in §6
+- **Fixed** bullet numbering that ran on across sections
+
+**Still open in the paper:**
+
+- **13 of 15 references read "Author(s) not specified".** Verified citations exist for 7
+  (`docs/literature_review.md`) but haven't been written into the .docx. The other 6 still need
+  looking up. Jankovic 1990 and the PPMI reference (Marek 2011) are missing entirely.
+- **No Results or Limitations section.** §9 and §14 of this README are the material for them.
+- **§6 text still lists imaging (MRI, DaTscan) and genetics (SNPs) as data-layer inputs.** That
+  contradicts the decision to hold them out of X (§6.3) and needs rewording.
+
+### Slides — `reports/slides/TRACE-PD_first_review.pptx`
+
+- Formatting pass: consistent text sizes, all Times New Roman, titles aligned; colours left
+  unchanged
+- Slide 3 had 59 / 38 / 35 pt body text and slide 4 had 45 / 29 pt → both normalised; slide 12
+  overflow fixed
+- Slides 5–6 were titled "Literature Review – AI Compliance Checks" (left over from another
+  project) → **Literature Review (1/2), (2/2)**
+- Slide 4 said "What is STRIDE?" → **TRACE-PD**
+- **Thank You** slide added
+- References slide left empty, as requested
+
+### Figures — `reports/figures/`
+
+| Figure | Shows | Made for |
+|---|---|---|
+| `fig_HLD_system_architecture` | three-column HLD — training / data layer / inference, with the subtype–transition fork | architecture slide, paper §6 |
+| `fig_problem_chart` | diagnostic certainty rising visit by visit; confident only after Visit 7+; slower in India | slide 2 — replaces the "The Problem" infographic |
+| `fig_gap_chart` | patient function declining during the delay before a confident diagnosis | slide 2 — replaces "The Gap This Creates" |
+| `fig_impact_diagram` | Earlier Confidence → Transparent Predictions → Closing a Research Gap | slide 3 — replaces the Impact infographic |
+| `fig_preprocessing_flow` | preprocessing pipeline | paper §5 |
+| `fig_cohort_labels` | cohort funnel and label distribution | paper §5 |
+
+> The three slide figures were made **as replacements** but have **not yet been inserted**
+> into the .pptx — the deck still has the original infographics.
+
+Every figure is regenerated by `make figures` from `src/trace_pd/viz/`.
+
+### Documents — `docs/`
+
+| File | Contents |
+|---|---|
+| `preprocessing_methods.md` | every preprocessing decision, written to lift directly into the methods section |
+| `architecture.md` | HLD walkthrough |
+| `conformal_design.md` | conformal layer design and its limits on this dataset |
+| `transition_risk_design.md` | transition model design |
+| `explanation_orchestrator.md` | explanation layer design |
+| `clinical_need.md` · `clinical_need_evidence_case.pdf` | evidence that the full exam isn't routine |
+| `literature_review.md` | 7 papers, verified citations, gaps; paper reference-list status |
+
+---
+
+## 17. What is intentionally not in this repo
+
+| Left out | Why |
+|---|---|
+| Phase 1 code: `01_preprocess.py`, `02_labeling.py`, `02b_labeling_compare.py`, `03_clustering_methods_compare.py` | built on the abandoned K-Means labels (§3) |
+| Phase 1 outputs: `ppmi_patient_labels*.csv`, `ppmi_joined_baseline_table.csv`, clustering comparison CSV | same; the baseline table also has the 100%-missing LEDD bug (§4.5) |
+| Phase 1 reports: technical report, clinician audit review, project reference doc | describe the slow / moderate / fast label |
+| 9 superseded architecture figure versions, Graphviz `.dot` drafts, flowchart versions of the problem / gap slides | replaced by the final figures above |
+| Paper drafts 1–5 and "final" | superseded by v7 |
+
+The originals still exist outside this repo, in `Downloads/PPMI_Parkinsons_Progression_Project/`.
 
 ---
 
