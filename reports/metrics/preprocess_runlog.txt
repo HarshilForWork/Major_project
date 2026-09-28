@@ -1,0 +1,120 @@
+==============================================================================
+01_preprocess_tdpigd.py
+Run started: 2026-09-10T12:03:29
+Raw input directory: /sessions/awesome-zen-cori/mnt/outputs/ppmi_raw
+==============================================================================
+
+[STEP 1] Cohort definition
+  Subjects in cohort file: 935
+  COHORT value counts:
+COHORT
+1    439
+4    383
+2    110
+3      3
+  PD cohort (COHORT==1): 439 patients (242 sporadic APPRDX==1, 197 genetic-cohort APPRDX==5)
+
+[STEP 2] MDS-UPDRS Part III (item level, ON/OFF de-duplication)
+  Raw Part III rows: 39255
+  Duplicate PATNO+EVENT_ID rows before de-dup: 6894
+  Rows after keeping one (OFF-preferred) per patient-visit: 32361
+  PDSTATE_USED distribution:
+PDSTATE_USED
+NaN    21680
+OFF     7609
+ON      3072
+
+[STEP 3] MDS-UPDRS Part II (item level, patient-reported)
+  Part II rows retained: 37692
+
+[STEP 4] Other clinical instruments
+  Medication: building LEDD via date-interval join (not EVENT_ID)
+    LEDD log rows: 10071; numeric LEDD parsed: 93.6%
+
+[STEP 5] Static per-patient tables
+
+[STEP 6] Joining
+  After visit-level outer joins: 49782 rows, 46 cols
+  After static left joins: 49782 rows, 62 cols
+
+[STEP 7] Filtering
+  Restrict to PD cohort (COHORT==1): 8719 -> 439 patients, 9752 rows
+  Dropped 2830 rows with non-scheduled visit codes: ['R06', 'R08', 'R10', 'R12', 'R13', 'R14', 'R15', 'R16', 'R17', 'R18', 'R19', 'R20', 'R21', 'R22', 'SC', 'ST', 'U01', 'U02', 'V21', 'V22']
+  Remaining: 6922 rows, 439 patients
+
+[STEP 8] Disease duration
+  Visit date (INFODT) parsed for 91.8% of rows
+  YRS_SINCE_SYMPTOM_ONSET: 90.8% present, median 6.41 yrs
+  YRS_SINCE_DIAGNOSIS: 91.8% present, median 5.00 yrs
+
+[STEP 8b] Medication burden at each visit (date-interval join)
+  LEDD_TOTAL_MG present: 91.8% | median 500 mg | 1006 rows on no PD medication
+  N_CONMEDS present: 91.8% | median 7 concomitant meds
+  LEDD by visit month (median, should rise over time as PD progresses):
+VISIT_MONTH
+0       0.0
+3       0.0
+6     179.0
+9     100.0
+12    300.0
+15    330.3
+18    400.0
+21    450.0
+24    500.0
+
+[STEP 9] Computing TD/PIGD label (Stebbins et al. 2013)
+  Rows with all 11 tremor items present : 5756
+  Rows with all  5 PIGD  items present  : 5742
+  Rows with a fully computable label    : 5742 (83.0% of 6922 rows)
+  Edge case -- PIGD score == 0 (ratio undefined): 845 rows
+  Label distribution (visit level):
+LABEL
+TD               3020
+PIGD             2102
+NaN              1180
+INDETERMINATE     620
+  Label distribution (%):
+LABEL
+TD               52.6
+PIGD             36.6
+INDETERMINATE    10.8
+
+[STEP 10] Transition / label-flip target
+  Consecutive visit pairs with both labels known: 4918
+  Visit-to-visit flip rate: 29.1%
+  Flip rate by current label:
+               flip_%  n_pairs
+LABEL                         
+INDETERMINATE    76.3      545
+PIGD             27.1     1629
+TD               20.9     2744
+  Patients with >=2 labelled visits: 439
+  Of those, ever changed label: 355 (80.9%)
+
+[STEP 11] Feature buckets / data dictionary
+  Columns per bucket:
+bucket
+CHEAP_FEATURE                 27
+BANNED_LABEL_DEFINING         19
+RESOURCE_DEPENDENT_FEATURE    12
+TARGET                         8
+ADMIN                          5
+KEY                            4
+  Leakage guard: PASSED (19 banned columns)
+  Strict guard:  PASSED (all 16 Y-defining items excluded, including the 3 patient-reported Part II items)
+  Usable feature columns remaining: 39
+
+[STEP 12] Per-round patient availability (label computable at each visit)
+  Round 1 (BL)                  : 438 patients
+  Round 2 (BL+6)                : 349 patients
+  Round 3 (BL+6+12)             : 323 patients
+  Round 4 (BL+6+12+24)          : 275 patients
+  ALT annual-only (BL+12)       : 403 patients
+  ALT annual-only (BL+12+24)    : 343 patients
+
+[STEP 13] Writing outputs
+  ppmi_tdpigd_long.csv: 6922 rows x 75 cols
+  ppmi_tdpigd_dictionary.csv: 75 column definitions
+  Duplicate PATNO+EVENT_ID rows in output: 0
+
+Run finished: 2026-09-10T12:03:31

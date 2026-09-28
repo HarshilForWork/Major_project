@@ -1,0 +1,43 @@
+# TRACE-PD -- pipeline configuration
+# Values here mirror the constants used by the preprocessing stage.
+# Editing this file does NOT yet drive the code; it documents the run
+# that produced data/processed and reports/metrics.
+
+data:
+  source: PPMI via LONI IDA
+  extract_date: 2026-08-16
+  n_source_tables: 19
+  raw_dir: data/raw/ppmi_csv
+  processed_table: data/processed/ppmi_tdpigd_long.csv
+
+cohort:
+  filter: COHORT == 1            # PPMI Parkinson's Disease cohort
+  n_patients: 439
+  n_sporadic: 242
+  n_genetic: 197
+
+label:
+  method: Jankovic (1990) / Stebbins et al. (2013) TD-PIGD ratio
+  tremor_items: 11               # 1 x Part II + 10 x Part III
+  pigd_items: 5                  # 2 x Part II + 3 x Part III
+  td_cutoff: 1.15                # ratio >= 1.15 -> TD
+  pigd_cutoff: 0.90              # ratio <= 0.90 -> PIGD
+  # 0.90 < ratio < 1.15          -> Indeterminate
+  completeness_rule: all 16 items must be present
+
+leakage:
+  policy: strict
+  # No column that participates in computing Y may be used for training.
+  n_banned_columns: 16
+  enforced_by: feature registry + runtime assertion in preprocess.py
+
+validation:
+  scheme: StratifiedGroupKFold
+  group_key: PATNO               # mandatory - ~17 visits per patient
+  n_splits: 5
+  random_state: 42
+
+transition:
+  target: LABEL_FLIPPED_NEXT
+  n_pairs: 4918
+  base_flip_rate: 0.291

@@ -1,0 +1,110 @@
+==========================================================================
+BASELINE MODEL -- HistGradientBoosting (xgboost not found)
+==========================================================================
+Strict policy verified: none of the 16 Y-defining items are inputs.
+Features (27): ['AGE_AT_VISIT', 'ESS_TOTAL', 'GDS_TOTAL', 'GENETIC_COHORT', 'HANDED', 'LEDD_TOTAL_MG', 'MCATOT', 'NP1PTOT', 'NP1RTOT', 'NP2DRES', 'NP2EAT', 'NP2HOBB', 'NP2HWRT', 'NP2HYGN', 'NP2RISE', 'NP2SALV', 'NP2SPCH', 'NP2SWAL', 'NP2TURN', 'N_CONMEDS', 'PDTRTMNT', 'RBDSQ_TOTAL', 'SCOPA_AUT_TOTAL', 'SEX', 'STAI_TOTAL', 'YRS_SINCE_DIAGNOSIS', 'YRS_SINCE_SYMPTOM_ONSET']
+
+==========================================================================
+EXPERIMENT 1 -- Round 1: baseline visit only
+==========================================================================
+n = 438 rows, 438 patients, 3 classes: ['INDETERMINATE', 'PIGD', 'TD']
+Class distribution: TD 266 (60.7%), PIGD 122 (27.9%), INDETERMINATE 50 (11.4%)
+CV: StratifiedKFold (one row per patient)
+
+Out-of-fold performance:
+          accuracy  balanced_acc  macro_F1  weighted_F1
+model                                                  
+MAJORITY     0.607         0.333     0.252        0.459
+LOGISTIC     0.500         0.442     0.427        0.537
+BOOST        0.562         0.427     0.427        0.560
+
+Per-class detail (boosted model):
+               precision    recall  f1-score   support
+
+           TD      0.695     0.703     0.699       266
+         PIGD      0.421     0.418     0.420       122
+INDETERMINATE      0.167     0.160     0.163        50
+
+     accuracy                          0.562       438
+    macro avg      0.428     0.427     0.427       438
+ weighted avg      0.559     0.562     0.560       438
+
+Confusion matrix (rows = true, cols = predicted):
+                TD  PIGD  INDETERMINATE
+TD             187    56             23
+PIGD            54    51             17
+INDETERMINATE   28    14              8
+
+==========================================================================
+EXPERIMENT 2 -- all scheduled visits pooled
+==========================================================================
+n = 5742 rows, 439 patients, 3 classes: ['INDETERMINATE', 'PIGD', 'TD']
+Class distribution: TD 3020 (52.6%), PIGD 2102 (36.6%), INDETERMINATE 620 (10.8%)
+CV: StratifiedGroupKFold grouped by PATNO (prevents patient leakage)
+
+Out-of-fold performance:
+          accuracy  balanced_acc  macro_F1  weighted_F1
+model                                                  
+MAJORITY     0.526         0.333     0.230        0.363
+LOGISTIC     0.550         0.487     0.477        0.576
+BOOST        0.544         0.460     0.456        0.561
+
+Per-class detail (boosted model):
+               precision    recall  f1-score   support
+
+           TD      0.689     0.580     0.630      3020
+         PIGD      0.571     0.590     0.581      2102
+INDETERMINATE      0.126     0.210     0.158       620
+
+     accuracy                          0.544      5742
+    macro avg      0.462     0.460     0.456      5742
+ weighted avg      0.585     0.544     0.561      5742
+
+Confusion matrix (rows = true, cols = predicted):
+                 TD  PIGD  INDETERMINATE
+TD             1751   700            569
+PIGD            531  1240            331
+INDETERMINATE   260   230            130
+
+==========================================================================
+EXPERIMENT 3 -- binary TD vs PIGD (Indeterminate dropped)
+==========================================================================
+n = 5122 rows, 439 patients, 2 classes: ['PIGD', 'TD']
+Class distribution: TD 3020 (59.0%), PIGD 2102 (41.0%)
+CV: StratifiedGroupKFold grouped by PATNO (prevents patient leakage)
+
+Out-of-fold performance:
+          accuracy  balanced_acc  macro_F1  weighted_F1
+model                                                  
+MAJORITY     0.590         0.500     0.371        0.437
+LOGISTIC     0.712         0.707     0.705        0.713
+BOOST        0.707         0.701     0.700        0.708
+
+Per-class detail (boosted model):
+              precision    recall  f1-score   support
+
+          TD      0.761     0.734     0.747      3020
+        PIGD      0.636     0.669     0.652      2102
+
+    accuracy                          0.707      5122
+   macro avg      0.699     0.701     0.700      5122
+weighted avg      0.710     0.707     0.708      5122
+
+Confusion matrix (rows = true, cols = predicted):
+        TD  PIGD
+TD    2217   803
+PIGD   696  1406
+
+==========================================================================
+SUMMARY -- balanced accuracy (3-class chance = 0.333, binary = 0.500)
+==========================================================================
+model                     MAJORITY  LOGISTIC  BOOST
+Exp 1: Round 1 (BL only)     0.333     0.442  0.427
+Exp 2: all visits            0.333     0.487  0.460
+Exp 3: TD vs PIGD            0.500     0.707  0.701
+
+Macro F1:
+model                     MAJORITY  LOGISTIC  BOOST
+Exp 1: Round 1 (BL only)     0.252     0.427  0.427
+Exp 2: all visits            0.230     0.477  0.456
+Exp 3: TD vs PIGD            0.371     0.705  0.700

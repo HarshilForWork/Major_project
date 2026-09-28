@@ -1,0 +1,29 @@
+==============================================================================
+ABLATION -- binary TD vs PIGD  |  backend: HistGradientBoosting (xgboost not installed)
+==============================================================================
+n = 5122 visit-rows, 439 patients (TD 3020, PIGD 2102)
+Chance-level balanced accuracy = 0.500
+
+                                                                  n_feat  balanced_acc  macro_F1  ROC_AUC
+configuration                                                                                            
+FULL (all 27 cheap features)                                          27         0.701     0.700    0.766
+A) drop GENETIC_COHORT (recruitment-arm flag)                         26         0.685     0.683    0.755
+B) drop axial items (NP2RISE, NP2TURN)                                25         0.691     0.689    0.757
+C) drop medication features                                           24         0.684     0.682    0.753
+D) drop all three groups above                                        21         0.667     0.665    0.729
+E) drop ALL Part II ADL items (no patient-reported motor at all)      17         0.681     0.679    0.735
+F) ONLY Part II ADL items                                             10         0.647     0.646    0.699
+G) ONLY the 2 axial items                                              2         0.633     0.627    0.688
+H) ONLY GENETIC_COHORT (sanity floor)                                  1         0.629     0.630    0.599
+
+==============================================================================
+INTERPRETATION
+==============================================================================
+  A) drop GENETIC_COHORT (recruitment-arm flag)                  0.685  (-0.016)
+  B) drop axial items (NP2RISE, NP2TURN)                         0.691  (-0.010)
+  C) drop medication features                                    0.684  (-0.017)
+  D) drop all three groups above                                 0.667  (-0.034)
+  E) drop ALL Part II ADL items (no patient-reported motor at all) 0.681  (-0.020)
+  F) ONLY Part II ADL items                                      0.647  (-0.054)
+  G) ONLY the 2 axial items                                      0.633  (-0.068)
+  H) ONLY GENETIC_COHORT (sanity floor)                          0.629  (-0.072)

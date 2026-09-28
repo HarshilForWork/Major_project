@@ -1,0 +1,35 @@
+# ---------------------------------------------------------------- data
+# PPMI data is governed by a Data Use Agreement and must NOT be redistributed.
+# Obtain it yourself from https://ida.loni.usc.edu  (see data/README.md)
+data/raw/
+data/interim/
+data/processed/
+!data/**/.gitkeep
+!data/README.md
+
+# trained artifacts
+models/*
+!models/.gitkeep
+
+# ---------------------------------------------------------------- python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------------------------------------------------------------- os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ---------------------------------------------------------------- office temp
+~$*
+.~lock.*
