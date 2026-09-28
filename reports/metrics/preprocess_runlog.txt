@@ -1,7 +1,7 @@
 ==============================================================================
 01_preprocess_tdpigd.py
-Run started: 2026-09-10T12:03:29
-Raw input directory: /sessions/awesome-zen-cori/mnt/outputs/ppmi_raw
+Run started: 2026-09-28T19:43:35
+Raw input directory: C:\Users\rutu2\Windows\Desktop\Major Project\Major_project\data\raw\ppmi_csv
 ==============================================================================
 
 [STEP 1] Cohort definition
@@ -94,15 +94,15 @@ TD               20.9     2744
 [STEP 11] Feature buckets / data dictionary
   Columns per bucket:
 bucket
-CHEAP_FEATURE                 27
+CHEAP_FEATURE                 26
 BANNED_LABEL_DEFINING         19
 RESOURCE_DEPENDENT_FEATURE    12
 TARGET                         8
-ADMIN                          5
+ADMIN                          6
 KEY                            4
   Leakage guard: PASSED (19 banned columns)
   Strict guard:  PASSED (all 16 Y-defining items excluded, including the 3 patient-reported Part II items)
-  Usable feature columns remaining: 39
+  Usable feature columns remaining: 38
 
 [STEP 12] Per-round patient availability (label computable at each visit)
   Round 1 (BL)                  : 438 patients
@@ -113,8 +113,8 @@ KEY                            4
   ALT annual-only (BL+12+24)    : 343 patients
 
 [STEP 13] Writing outputs
-  ppmi_tdpigd_long.csv: 6922 rows x 75 cols
-  ppmi_tdpigd_dictionary.csv: 75 column definitions
+  C:\Users\rutu2\Windows\Desktop\Major Project\Major_project\data\processed\ppmi_tdpigd_long.csv: 6922 rows x 75 cols
+  C:\Users\rutu2\Windows\Desktop\Major Project\Major_project\data\processed\ppmi_tdpigd_dictionary.csv: 75 column definitions
   Duplicate PATNO+EVENT_ID rows in output: 0
 
-Run finished: 2026-09-10T12:03:31
+Run finished: 2026-09-28T19:43:39

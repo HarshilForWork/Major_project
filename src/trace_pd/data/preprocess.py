@@ -542,7 +542,7 @@ FORMULA_P2 = []  # intentionally empty under the strict policy
 RESOURCE = ["CAUDATE_REF_CWM", "PUTAMEN_REF_CWM", "STRIATUM_REF_CWM",
             "DATSCAN_VISINTRP", "APOE", "LRRK2", "GBA", "VPS35", "SNCA",
             "PRKN", "PARK7", "PINK1"]
-ADMIN = ["APPRDX", "COHORT", "PDSTATE_USED", "SXDT", "PDDXDT"]
+ADMIN = ["APPRDX", "COHORT", "GENETIC_COHORT", "PDSTATE_USED", "SXDT", "PDDXDT"]
 
 BUCKET_NOTES = {
     "KEY": "Identifier / join key. Not a predictor.",

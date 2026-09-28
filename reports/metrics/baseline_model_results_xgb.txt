@@ -1,8 +1,8 @@
 ==========================================================================
-BASELINE MODEL -- HistGradientBoosting (xgboost not found)
+BASELINE MODEL -- XGBoost
 ==========================================================================
 Strict policy verified: none of the 16 Y-defining items are inputs.
-Features (27): ['AGE_AT_VISIT', 'ESS_TOTAL', 'GDS_TOTAL', 'GENETIC_COHORT', 'HANDED', 'LEDD_TOTAL_MG', 'MCATOT', 'NP1PTOT', 'NP1RTOT', 'NP2DRES', 'NP2EAT', 'NP2HOBB', 'NP2HWRT', 'NP2HYGN', 'NP2RISE', 'NP2SALV', 'NP2SPCH', 'NP2SWAL', 'NP2TURN', 'N_CONMEDS', 'PDTRTMNT', 'RBDSQ_TOTAL', 'SCOPA_AUT_TOTAL', 'SEX', 'STAI_TOTAL', 'YRS_SINCE_DIAGNOSIS', 'YRS_SINCE_SYMPTOM_ONSET']
+Features (26): ['AGE_AT_VISIT', 'ESS_TOTAL', 'GDS_TOTAL', 'HANDED', 'LEDD_TOTAL_MG', 'MCATOT', 'NP1PTOT', 'NP1RTOT', 'NP2DRES', 'NP2EAT', 'NP2HOBB', 'NP2HWRT', 'NP2HYGN', 'NP2RISE', 'NP2SALV', 'NP2SPCH', 'NP2SWAL', 'NP2TURN', 'N_CONMEDS', 'PDTRTMNT', 'RBDSQ_TOTAL', 'SCOPA_AUT_TOTAL', 'SEX', 'STAI_TOTAL', 'YRS_SINCE_DIAGNOSIS', 'YRS_SINCE_SYMPTOM_ONSET']
 
 ==========================================================================
 EXPERIMENT 1 -- Round 1: baseline visit only
@@ -15,25 +15,39 @@ Out-of-fold performance:
           accuracy  balanced_acc  macro_F1  weighted_F1
 model                                                  
 MAJORITY     0.607         0.333     0.252        0.459
-LOGISTIC     0.500         0.442     0.427        0.537
-BOOST        0.562         0.427     0.427        0.560
+LOGISTIC     0.502         0.445     0.430        0.538
+BOOST        0.582         0.451     0.452        0.580
 
 Per-class detail (boosted model):
                precision    recall  f1-score   support
 
-           TD      0.695     0.703     0.699       266
-         PIGD      0.421     0.418     0.420       122
-INDETERMINATE      0.167     0.160     0.163        50
+           TD      0.704     0.714     0.709       266
+         PIGD      0.459     0.459     0.459       122
+INDETERMINATE      0.196     0.180     0.187        50
 
-     accuracy                          0.562       438
-    macro avg      0.428     0.427     0.427       438
- weighted avg      0.559     0.562     0.560       438
+     accuracy                          0.582       438
+    macro avg      0.453     0.451     0.452       438
+ weighted avg      0.578     0.582     0.580       438
 
 Confusion matrix (rows = true, cols = predicted):
                 TD  PIGD  INDETERMINATE
-TD             187    56             23
-PIGD            54    51             17
-INDETERMINATE   28    14              8
+TD             190    52             24
+PIGD            53    56             13
+INDETERMINATE   27    14              9
+
+Top 12 features by importance (fitted on all rows, indicative only):
+PDTRTMNT               0.0728
+NP2RISE                0.0532
+LEDD_TOTAL_MG          0.0513
+NP2HOBB                0.0444
+NP2SALV                0.0431
+NP2SWAL                0.0431
+NP1PTOT                0.0424
+N_CONMEDS              0.0409
+SEX                    0.0403
+NP2SPCH                0.0395
+NP2HYGN                0.0391
+YRS_SINCE_DIAGNOSIS    0.0388
 
 ==========================================================================
 EXPERIMENT 2 -- all scheduled visits pooled
@@ -46,25 +60,39 @@ Out-of-fold performance:
           accuracy  balanced_acc  macro_F1  weighted_F1
 model                                                  
 MAJORITY     0.526         0.333     0.230        0.363
-LOGISTIC     0.550         0.487     0.477        0.576
-BOOST        0.544         0.460     0.456        0.561
+LOGISTIC     0.539         0.469     0.463        0.567
+BOOST        0.550         0.462     0.460        0.567
 
 Per-class detail (boosted model):
                precision    recall  f1-score   support
 
-           TD      0.689     0.580     0.630      3020
-         PIGD      0.571     0.590     0.581      2102
-INDETERMINATE      0.126     0.210     0.158       620
+           TD      0.696     0.593     0.640      3020
+         PIGD      0.578     0.591     0.585      2102
+INDETERMINATE      0.123     0.203     0.153       620
 
-     accuracy                          0.544      5742
-    macro avg      0.462     0.460     0.456      5742
- weighted avg      0.585     0.544     0.561      5742
+     accuracy                          0.550      5742
+    macro avg      0.466     0.462     0.460      5742
+ weighted avg      0.591     0.550     0.567      5742
 
 Confusion matrix (rows = true, cols = predicted):
                  TD  PIGD  INDETERMINATE
-TD             1751   700            569
-PIGD            531  1240            331
-INDETERMINATE   260   230            130
+TD             1790   681            549
+PIGD            512  1243            347
+INDETERMINATE   268   226            126
+
+Top 12 features by importance (fitted on all rows, indicative only):
+NP2RISE                0.0886
+NP2TURN                0.0667
+PDTRTMNT               0.0665
+SEX                    0.0535
+LEDD_TOTAL_MG          0.0500
+YRS_SINCE_DIAGNOSIS    0.0474
+NP2HYGN                0.0468
+NP2DRES                0.0406
+HANDED                 0.0377
+NP2SPCH                0.0354
+NP1PTOT                0.0337
+NP2HWRT                0.0336
 
 ==========================================================================
 EXPERIMENT 3 -- binary TD vs PIGD (Indeterminate dropped)
@@ -77,34 +105,48 @@ Out-of-fold performance:
           accuracy  balanced_acc  macro_F1  weighted_F1
 model                                                  
 MAJORITY     0.590         0.500     0.371        0.437
-LOGISTIC     0.712         0.707     0.705        0.713
-BOOST        0.707         0.701     0.700        0.708
+LOGISTIC     0.700         0.696     0.693        0.701
+BOOST        0.695         0.690     0.688        0.696
 
 Per-class detail (boosted model):
               precision    recall  f1-score   support
 
-          TD      0.761     0.734     0.747      3020
-        PIGD      0.636     0.669     0.652      2102
+          TD      0.753     0.719     0.736      3020
+        PIGD      0.621     0.661     0.640      2102
 
-    accuracy                          0.707      5122
-   macro avg      0.699     0.701     0.700      5122
-weighted avg      0.710     0.707     0.708      5122
+    accuracy                          0.695      5122
+   macro avg      0.687     0.690     0.688      5122
+weighted avg      0.699     0.695     0.696      5122
 
 Confusion matrix (rows = true, cols = predicted):
         TD  PIGD
-TD    2217   803
-PIGD   696  1406
+TD    2172   848
+PIGD   713  1389
+
+Top 12 features by importance (fitted on all rows, indicative only):
+NP2RISE                    0.1576
+NP2TURN                    0.0991
+LEDD_TOTAL_MG              0.0652
+PDTRTMNT                   0.0585
+NP2HYGN                    0.0559
+SEX                        0.0536
+YRS_SINCE_DIAGNOSIS        0.0502
+NP2DRES                    0.0437
+HANDED                     0.0357
+NP2SPCH                    0.0351
+YRS_SINCE_SYMPTOM_ONSET    0.0249
+NP1PTOT                    0.0247
 
 ==========================================================================
 SUMMARY -- balanced accuracy (3-class chance = 0.333, binary = 0.500)
 ==========================================================================
 model                     MAJORITY  LOGISTIC  BOOST
-Exp 1: Round 1 (BL only)     0.333     0.442  0.427
-Exp 2: all visits            0.333     0.487  0.460
-Exp 3: TD vs PIGD            0.500     0.707  0.701
+Exp 1: Round 1 (BL only)     0.333     0.445  0.451
+Exp 2: all visits            0.333     0.469  0.462
+Exp 3: TD vs PIGD            0.500     0.696  0.690
 
 Macro F1:
 model                     MAJORITY  LOGISTIC  BOOST
-Exp 1: Round 1 (BL only)     0.252     0.427  0.427
-Exp 2: all visits            0.230     0.477  0.456
-Exp 3: TD vs PIGD            0.371     0.705  0.700
+Exp 1: Round 1 (BL only)     0.252     0.430  0.452
+Exp 2: all visits            0.230     0.463  0.460
+Exp 3: TD vs PIGD            0.371     0.693  0.688

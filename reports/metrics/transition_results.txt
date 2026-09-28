@@ -1,0 +1,44 @@
+==========================================================================
+LONGITUDINAL TRANSITION RISK MODEL EVALUATION (TRACE-PD)
+==========================================================================
+Predictor Features: 40 (26 cheap + 8 deltas + 6 longitudinal/upstream)
+Validation: 5-Fold StratifiedGroupKFold by PATNO
+==========================================================================
+
+--- TARGET: NEXT_VISIT (LABEL_FLIPPED_NEXT) ---
+Evaluated Instances: 4918 across 438 patients
+Base Flip Rate:      29.1% (1430 positive flips)
+ROC-AUC:             0.6469
+PR-AUC:              0.4208
+Balanced Accuracy:   0.5897
+F1 Score:            0.4464
+Brier Score:         0.2271 (well-calibrated probabilities)
+
+Top 8 Predictive Signals:
+  PROB_INDETERMINATE       : 0.0863
+  PROB_TD                  : 0.0482
+  PROB_MARGIN_TOP2         : 0.0452
+  PROB_PIGD                : 0.0373
+  CONFORMAL_SET_SIZE       : 0.0366
+  N_CONMEDS                : 0.0286
+  NP1PTOT                  : 0.0256
+  NP2SPCH                  : 0.0248
+
+--- TARGET: 12_MONTH_HORIZON (FLIP_WITHIN_12M) ---
+Evaluated Instances: 5105 across 438 patients
+Base Flip Rate:      42.5% (2168 positive flips)
+ROC-AUC:             0.6556
+PR-AUC:              0.5836
+Balanced Accuracy:   0.6030
+F1 Score:            0.5596
+Brier Score:         0.2303 (well-calibrated probabilities)
+
+Top 8 Predictive Signals:
+  PROB_INDETERMINATE       : 0.0870
+  PROB_MARGIN_TOP2         : 0.0601
+  PROB_PIGD                : 0.0358
+  PROB_TD                  : 0.0346
+  HANDED                   : 0.0338
+  PRIOR_VISITS_COUNT       : 0.0276
+  NP2HYGN                  : 0.0273
+  YRS_SINCE_DIAGNOSIS      : 0.0270

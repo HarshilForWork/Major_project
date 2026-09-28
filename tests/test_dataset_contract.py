@@ -62,6 +62,12 @@ def test_no_label_defining_item_is_a_feature(dictionary):
     assert features.isdisjoint(LABEL_DEFINING)
 
 
+def test_no_recruitment_flag_in_cheap_features(dictionary):
+    """Ensure GENETIC_COHORT recruitment flag is never in CHEAP_FEATURE."""
+    cheap_features = set(dictionary.loc[dictionary["bucket"] == "CHEAP_FEATURE", "column"])
+    assert "GENETIC_COHORT" not in cheap_features
+
+
 def test_label_is_reproducible_from_component_scores(df):
     """Recompute the Stebbins classification and check it matches, as the
     preprocessing stage claims (0 mismatches across all labelled rows)."""

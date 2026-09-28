@@ -42,10 +42,19 @@ figures:
 docs:
 	$(PY) src/trace_pd/data/export_dictionary.py
 
+conformal:
+	$(PY) -m trace_pd.models.conformal
+
+transition:
+	$(PY) -m trace_pd.models.train_transition
+
+demo:
+	$(PY) -m trace_pd.inference --demo
+
 test:
 	$(PY) -m pytest tests -v
 
-all: preprocess baseline xgboost ablation sporadic figures docs
+all: preprocess baseline xgboost ablation sporadic conformal transition figures docs
 
 clean:
 	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true

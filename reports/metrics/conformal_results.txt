@@ -1,0 +1,38 @@
+==========================================================================
+CONFORMAL CONFIDENCE EVALUATION REPORT (TRACE-PD)
+==========================================================================
+Target Marginal Coverage: 90.0% (alpha = 0.10) across unseen patients
+Evaluation: 5-Fold StratifiedGroupKFold by PATNO
+
+--- TASK 1: BINARY (TD vs PIGD) - 5,122 rows, 439 patients ---
+LAC Method:
+  Empirical OOF Coverage: 89.32%
+  Mean Set Size:          1.51 classes
+  Singleton Sets (Size 1):49.1%
+  Dual-Label Sets (Size 2):50.9%
+  Calibrated Threshold:   q_hat = 0.7245
+
+APS Method:
+  Empirical OOF Coverage: 99.04%
+  Mean Set Size:          1.92 classes
+  Singleton Sets (Size 1):7.9%
+  Dual-Label Sets (Size 2):92.1%
+  Calibrated Threshold:   q_hat = 0.9069
+
+--- TASK 2: 3-CLASS (TD vs PIGD vs INDETERMINATE) - 5,742 rows ---
+LAC Method:
+  Empirical OOF Coverage: 89.12%
+  Mean Set Size:          2.36 classes
+  Size 1 (Singleton):     12.6%
+  Size 2 (Dual label):    39.2%
+  Size 3 (Uncertain):     48.3%
+  Calibrated Threshold:   q_hat = 0.8185
+
+APS Method:
+  Empirical OOF Coverage: 98.57%
+  Mean Set Size:          2.87 classes
+  Size 1 (Singleton):     1.0%
+  Size 2 (Dual label):    10.7%
+  Size 3 (Uncertain):     88.2%
+  Calibrated Threshold:   q_hat = 0.9172
+==========================================================================

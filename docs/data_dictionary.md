@@ -10,16 +10,16 @@ column ever lands in a feature bucket.
 
 | Bucket | Columns | Used for training |
 |---|---|---|
-| `CHEAP_FEATURE` | 27 | **yes** |
+| `CHEAP_FEATURE` | 26 | **yes** |
 | `RESOURCE_DEPENDENT_FEATURE` | 12 | no |
 | `BANNED_LABEL_DEFINING` | 19 | no |
 | `TARGET` | 8 | no |
 | `KEY` | 4 | no |
-| `ADMIN` | 5 | no |
+| `ADMIN` | 6 | no |
 
 ---
 
-## ✅ Model input (X) — `CHEAP_FEATURE` (27)
+## ✅ Model input (X) — `CHEAP_FEATURE` (26)
 
 *Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set.*
 
@@ -28,7 +28,6 @@ column ever lands in a feature bucket.
 | `AGE_AT_VISIT` | Age at visit | Age at Visit | numeric | 99.6 | 540 |
 | `ESS_TOTAL` | Epworth Sleepiness Scale item sum | Epworth (item sum) | numeric | 66.9 | 25 |
 | `GDS_TOTAL` | Geriatric Depression Scale item sum | GDS-15 (item sum) | numeric | 66.7 | 16 |
-| `GENETIC_COHORT` | Recruited into the genetic cohort (see limitation below) | Derived (Subject Cohort History) | numeric | 100.0 | 2 |
 | `HANDED` | Handedness | Demographics | numeric | 100.0 | 3 |
 | `LEDD_TOTAL_MG` | Levodopa-equivalent daily dose (date-interval join) | LEDD Med Log (date interval) | numeric | 91.8 | 753 |
 | `MCATOT` | MoCA total | MoCA | numeric | 52.3 | 28 |
@@ -134,7 +133,7 @@ column ever lands in a feature bucket.
 
 ---
 
-## 🗂 Admin / provenance — `ADMIN` (5)
+## 🗂 Admin / provenance — `ADMIN` (6)
 
 *Provenance / bookkeeping. Not a predictor.*
 
@@ -142,6 +141,7 @@ column ever lands in a feature bucket.
 |---|---|---|---|---|---|
 | `APPRDX` | PPMI diagnostic sub-code | Subject Cohort History | numeric | 100.0 | 2 |
 | `COHORT` | PPMI cohort code | Subject Cohort History | numeric | 100.0 | 1 |
+| `GENETIC_COHORT` | Recruited into the genetic cohort (see limitation below) | Derived (Subject Cohort History) | numeric | 100.0 | 2 |
 | `PDDXDT` | Diagnosis date (source) | PD Diagnosis History | text | 100.0 | 113 |
 | `PDSTATE_USED` | Medication state of the retained Part III record | MDS-UPDRS Part III | text | 72.5 | 2 |
 | `SXDT` | Symptom onset date (source) | PD Diagnosis History | text | 98.9 | 131 |

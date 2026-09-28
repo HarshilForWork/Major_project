@@ -10,7 +10,7 @@ TREMOR_SCORE,Y - target,Computed (Stebbins formula),83.0,float64
 AGE_AT_VISIT,X - predictor,Age at Visit,99.6,float64
 ESS_TOTAL,X - predictor,Epworth (item sum),66.9,float64
 GDS_TOTAL,X - predictor,GDS-15 (item sum),66.7,float64
-GENETIC_COHORT,X - predictor,Derived (Subject Cohort History),100.0,float64
+GENETIC_COHORT,Excluded - admin,Derived (Subject Cohort History),100.0,float64
 HANDED,X - predictor,Demographics,100.0,float64
 LEDD_TOTAL_MG,X - predictor,LEDD Med Log (date interval),91.8,float64
 MCATOT,X - predictor,MoCA,52.3,float64

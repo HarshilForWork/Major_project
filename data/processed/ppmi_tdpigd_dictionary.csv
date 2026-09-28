@@ -1,6 +1,7 @@
 column,bucket,dtype,pct_present,n_unique,bucket_meaning
 APPRDX,ADMIN,float64,100.0,2,Provenance / bookkeeping. Not a predictor.
 COHORT,ADMIN,float64,100.0,1,Provenance / bookkeeping. Not a predictor.
+GENETIC_COHORT,ADMIN,float64,100.0,2,Provenance / bookkeeping. Not a predictor.
 PDDXDT,ADMIN,object,100.0,113,Provenance / bookkeeping. Not a predictor.
 PDSTATE_USED,ADMIN,object,72.5,2,Provenance / bookkeeping. Not a predictor.
 SXDT,ADMIN,object,98.9,131,Provenance / bookkeeping. Not a predictor.
@@ -26,7 +27,6 @@ NP3TOT,BANNED_LABEL_DEFINING,float64,81.5,91,"Participates in computing Y (a Par
 AGE_AT_VISIT,CHEAP_FEATURE,float64,99.6,540,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 ESS_TOTAL,CHEAP_FEATURE,float64,66.9,25,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 GDS_TOTAL,CHEAP_FEATURE,float64,66.7,16,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
-GENETIC_COHORT,CHEAP_FEATURE,float64,100.0,2,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 HANDED,CHEAP_FEATURE,float64,100.0,3,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 LEDD_TOTAL_MG,CHEAP_FEATURE,float64,91.8,753,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 MCATOT,CHEAP_FEATURE,float64,52.3,28,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
@@ -53,7 +53,7 @@ YRS_SINCE_SYMPTOM_ONSET,CHEAP_FEATURE,float64,90.8,831,"Patient-reported or low-
 EVENT_ID,KEY,object,100.0,21,Identifier / join key. Not a predictor.
 INFODT,KEY,object,91.8,191,Identifier / join key. Not a predictor.
 PATNO,KEY,int64,100.0,439,Identifier / join key. Not a predictor.
-VISIT_MONTH,KEY,int64,100.0,21,Identifier / join key. Not a predictor.
+VISIT_MONTH,KEY,int32,100.0,21,Identifier / join key. Not a predictor.
 APOE,RESOURCE_DEPENDENT_FEATURE,object,99.2,6,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
 CAUDATE_REF_CWM,RESOURCE_DEPENDENT_FEATURE,float64,12.6,141,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
 DATSCAN_VISINTRP,RESOURCE_DEPENDENT_FEATURE,object,95.2,2,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.

@@ -79,7 +79,8 @@ COHORT_FLAG = ["GENETIC_COHORT"]
 ADL_ALL = [c for c in FEATURES if c.startswith("NP2")]
 
 b = df[df.LABEL.isin(["TD", "PIGD"])].copy()
-X_full = b[FEATURES].apply(pd.to_numeric, errors="coerce")
+ALL_COLS = sorted(list(set(FEATURES + COHORT_FLAG + AXIAL + MEDS + ADL_ALL)))
+X_full = b[ALL_COLS].apply(pd.to_numeric, errors="coerce")
 y = b["LABEL"]
 groups = b["PATNO"].values
 le = LabelEncoder().fit(y)
@@ -118,25 +119,24 @@ log(f"n = {len(y)} visit-rows, {b.PATNO.nunique()} patients "
 log("Chance-level balanced accuracy = 0.500")
 
 results = [
-    run(FEATURES, "FULL (all 27 cheap features)"),
-    run([c for c in FEATURES if c not in COHORT_FLAG],
-        "A) drop GENETIC_COHORT (recruitment-arm flag)"),
+    run(FEATURES, "FULL (all 26 clean cheap features)"),
+    run(FEATURES + COHORT_FLAG, "Ref: + GENETIC_COHORT (recruitment flag)"),
     run([c for c in FEATURES if c not in AXIAL],
-        "B) drop axial items (NP2RISE, NP2TURN)"),
+        "A) drop axial items (NP2RISE, NP2TURN)"),
     run([c for c in FEATURES if c not in MEDS],
-        "C) drop medication features"),
-    run([c for c in FEATURES if c not in COHORT_FLAG + AXIAL + MEDS],
-        "D) drop all three groups above"),
+        "B) drop medication features"),
+    run([c for c in FEATURES if c not in AXIAL + MEDS],
+        "C) drop axial and medication features"),
     run([c for c in FEATURES if c not in ADL_ALL],
-        "E) drop ALL Part II ADL items (no patient-reported motor at all)"),
-    run(ADL_ALL, "F) ONLY Part II ADL items"),
-    run(AXIAL, "G) ONLY the 2 axial items"),
-    run(COHORT_FLAG, "H) ONLY GENETIC_COHORT (sanity floor)"),
+        "D) drop ALL Part II ADL items (no patient-reported motor at all)"),
+    run(ADL_ALL, "E) ONLY Part II ADL items"),
+    run(AXIAL, "F) ONLY the 2 axial items"),
+    run(COHORT_FLAG, "G) ONLY GENETIC_COHORT (sanity floor)"),
 ]
 res = pd.DataFrame(results).set_index("configuration")
 log("\n" + res.to_string())
 
-full = res.loc["FULL (all 27 cheap features)", "balanced_acc"]
+full = res.loc["FULL (all 26 clean cheap features)", "balanced_acc"]
 log("\n" + "=" * 78)
 log("INTERPRETATION")
 log("=" * 78)
