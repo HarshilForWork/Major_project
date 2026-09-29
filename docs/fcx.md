@@ -17,12 +17,10 @@ a tremor channel vs a gait channel. Every explanation is scored against the true
 Everything is our own implementation, including the Shapley estimator (no SHAP/LIME
 dependency); SHAP-style attribution appears only as the **baseline**.
 
-**Model-agnostic, checked:** the pre-audit run on XGBoost matched sklearn gradient boosting
-almost exactly (C1 fidelity 89.7% vs 89.6%; C2 κ 0.60 vs 0.61).
-
 > **Status 30 Sep, after a code audit.** An independent review found 15 issues; all are fixed
-> (§5). Three of them changed what we can claim — read §5 before quoting any number. The numbers
-> below are the **post-audit sklearn run**. The post-audit XGBoost re-run is pending.
+> (§5). Three of them changed what we can claim — read §5 before quoting any number. The tables
+> below show the **post-audit sklearn run**; the **post-audit XGBoost run** is in §4 and agrees
+> with it.
 
 ![FCX summary](../reports/figures/fig_fcx_summary.png)
 
@@ -174,6 +172,34 @@ The strongest publishable pieces:
 1. The formula-coordinate fidelity results.
 2. The component-calibrated PDN surrogate with its planted-mechanism validation.
 3. The clinically actionable finding that **tremor is the missing information**.
+
+---
+
+## 4. Same framework, two black boxes — XGBoost vs sklearn (post-audit)
+
+FCX only uses a model's predictions, so its results should be close for any comparable black
+box. They are:
+
+| Metric | sklearn HGB | **XGBoost** |
+|---|---|---|
+| C1 fidelity — implied decision = classifier | 89.6% | **89.7%** |
+| C1 rank corr, P(PIGD) vs implied ratio | 0.923 | **0.928** |
+| C1 alignment — tremor / gait | 0.25 / 0.57 | 0.25 / 0.57 |
+| C1 error attribution (chance 0.50) | 0.47–0.53 | 0.44–0.50 |
+| C2 fidelity κ | 0.61 | **0.60** |
+| C2 null check (true vs shuffled) | 82% vs 77% | 82% vs 79% |
+| C2 real test — FCX blame / always-tremor | 90% / 94% | 90% / 95% |
+| C2 tremor exam / gait exam collapses ambiguous sets | 95% / 53% | 95% / 53% |
+| C3 E1 cheap — black-box AUROC / C3 R² | 0.52 / 0.18 | 0.53 / 0.16 |
+| C3 E2 exam-informed — AUROC / R² / proximity share | 0.77 / 0.62 / 83% | **0.77 / 0.61 / 80%** |
+| C3 E3 sustained — AUROC / R² | 0.79 / 0.56 | **0.80 / 0.52** |
+| C3 noise-vs-drift, E3 — C3 / grouped Shapley | 0.64 / 0.66 | 0.62 / 0.67 |
+| C3 planted — trained proximity-only / synthetic 3 mechanisms | PASS / 3/3 | **PASS / 3/3** |
+
+**Every conclusion holds on both black boxes**, including the negative ones.
+
+Sources: `reports/metrics/fcx_results.txt` · `fcx_results_xgb.txt` · `c3_validation.txt` ·
+`c3_validation_xgb.txt`.
 
 ---
 
