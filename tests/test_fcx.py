@@ -58,6 +58,18 @@ def test_pdn_shapley_efficiency():
     p.calibrate_fidelity(X, np.clip(0.3 + 0.1 * X[:, 0], 0.01, 0.99))
     e = p.explain(X[:20])
     assert np.allclose(e["phi_P"] + e["phi_D"] + e["phi_N"], e["full"] - e["base"])
+    assert np.allclose(e["full"], p.predict_logit(X[:20]))
+
+
+def test_pdn_component_weights_follow_the_black_box():
+    """A black box driven only by the proximity component should load on P, not D or N."""
+    rng = np.random.default_rng(3)
+    X = rng.normal(size=(600, 5))
+    p = PDNExplainer().fit(X, X[:, 0] * 0.5, X[:, 1] * 0.2, np.abs(X[:, 2]) * 0.3 + 0.05)
+    H = p.heads(X); p._set_reference(H); s, _ = p.surrogate_components(H=H)
+    g = 1 / (1 + np.exp(-(-1.0 + 1.5 * s["P"])))            # planted: proximity only
+    p.calibrate_fidelity(X, g)
+    assert abs(p.b["P"]) > 5 * max(abs(p.b["D"]), abs(p.b["N"]))
 
 
 def test_straddle_logic():

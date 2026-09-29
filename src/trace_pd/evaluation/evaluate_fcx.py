@@ -9,7 +9,8 @@ Every explanation is scored three ways: FIDELITY to the black box, ALIGNMENT wit
 true hidden scores, and CORRECTNESS of what it blames. Baselines use the same own
 Shapley implementation on the black box directly, with features grouped by channel.
 
-Run:  python src/trace_pd/evaluation/evaluate_fcx.py      (or: make fcx)
+Run:  python src/trace_pd/evaluation/evaluate_fcx.py [--backend xgb|hgb]   (or: make fcx)
+      default backend: xgb if installed, else hgb. Output: reports/metrics/fcx_results[_xgb].txt
 """
 from pathlib import Path as _Path
 import sys
@@ -26,6 +27,8 @@ from trace_pd.explain.shapley import shapley_mc
 from trace_pd.explain.implied_exam import ImpliedExamExplainer
 from trace_pd.explain.straddle import CutoffStraddleExplainer
 from trace_pd.explain.pdn import PDNExplainer, logit
+from trace_pd.models.backend import make_classifier, fit_classifier, backend_from_argv
+BACKEND = backend_from_argv(sys.argv)
 
 PROC, MET, FIG, INT = (_ROOT / "data/processed", _ROOT / "reports/metrics",
                        _ROOT / "reports/figures", _ROOT / "data/interim")
@@ -47,10 +50,10 @@ zone_ok = (FM.ZONE_NAMES[FM.zone(df.loc[lab, "ell"])] == df.loc[lab, "LABEL"]).m
 log("=" * 78); log("FCX -- FORMULA-COORDINATE EXPLANATIONS  |  evaluation on PPMI"); log("=" * 78)
 log(f"features: {len(FEATS)} cheap | labelled visits: {lab.sum():,} | "
     f"formula zones reproduce stored labels: {zone_ok*100:.2f}%")
-log("black boxes: sklearn HistGradientBoosting (model-agnostic; swap in XGBoost unchanged)")
+log(f"black boxes: {'XGBoost' if BACKEND == 'xgb' else 'sklearn HistGradientBoosting'}  (explainer heads: sklearn HGB)")
 
 def fit_clf(X, y):
-    return HistGradientBoostingClassifier(**CLF).fit(X, y, sample_weight=compute_sample_weight("balanced", y))
+    return fit_classifier(make_classifier(BACKEND, n_classes=len(np.unique(y))), X, y)
 
 def channel_groups(Xtr, lT, lP):
     """Baseline grouping: a feature is 'tremor-ish' if it correlates more with true log T than log P."""
@@ -206,7 +209,7 @@ sp = np.sort(oofp, 1); d3["P_MARGIN"] = sp[:, -1] - sp[:, -2]
 F3 = FEATS + ["D_" + c for c in DCOLS] + ["PRIOR_VISITS", "P_TD", "P_PIGD", "P_IND", "P_MARGIN"]
 t3 = d3[d3.LABEL_FLIPPED_NEXT.notna()].reset_index(drop=True)
 X3 = t3[F3].to_numpy(float); y3 = t3.LABEL_FLIPPED_NEXT.astype(int).to_numpy(); G3 = t3.PATNO.to_numpy()
-g3p = np.zeros(len(t3)); fid = np.zeros(len(t3)); rows3 = []
+g3p = np.zeros(len(t3)); fid = np.zeros(len(t3)); rows3 = []; W3 = []
 LEVEL = list(range(len(FEATS))) + [F3.index(c) for c in ("P_TD", "P_PIGD", "P_IND", "P_MARGIN")]
 DRIFT = [F3.index("D_" + c) for c in DCOLS] + [F3.index("PRIOR_VISITS")]
 NOISEF = [F3.index(c) for c in ("LEDD_TOTAL_MG", "N_CONMEDS", "PDTRTMNT", "D_LEDD_TOTAL_MG")]
@@ -217,7 +220,7 @@ for fold, (tr, te) in enumerate(StratifiedGroupKFold(5, shuffle=True, random_sta
     pdn = PDNExplainer().fit(X3[tr], t3.eta.to_numpy()[tr], t3.mu.to_numpy()[tr], t3.noise_abs.to_numpy()[tr])
     pdn.calibrate_fidelity(X3[tr], g3.predict_proba(X3[tr])[:, 1])
     fid[te] = pdn.predict_logit(X3[te])
-    e = pdn.explain(X3[te])
+    e = pdn.explain(X3[te]); W3.append(e["weights"])
     g3l = lambda Z, m=g3: logit(m.predict_proba(Z)[:, 1])
     bg = X3[np.random.default_rng(fold).choice(tr, size=N_BG, replace=False)]
     phb, _ = shapley_mc(g3l, X3[te], bg, n_perm=N_PERM, groups=[LEVEL, DRIFT, NOISEF], rng=np.random.default_rng(fold))
@@ -232,6 +235,7 @@ zg = logit(g3p)
 log(f"black-box transition model: AUROC {roc_auc_score(y3, g3p):.3f} (base flip rate {y3.mean()*100:.1f}%)")
 log(f"FIDELITY   corr(logit g3, FCX surrogate) {np.corrcoef(zg, fid)[0,1]:.3f} | R^2 {1 - np.var(zg-fid)/np.var(zg):.3f} | "
     f"surrogate AUROC {roc_auc_score(y3, fid):.3f}")
+log("component weights b_P / b_D / b_N (mean over folds): " + " / ".join(f"{np.mean([w[c] for w in W3]):+.2f}" for c in "PDN"))
 aP_, aD_, aN_ = (t3.phi_P.abs().mean(), t3.phi_D.abs().mean(), t3.phi_N.abs().mean())
 tot = aP_ + aD_ + aN_
 log(f"WHAT DRIVES PREDICTED RISK (mean |phi| share):  proximity {aP_/tot*100:.0f}% | drift {aD_/tot*100:.0f}% | noise {aN_/tot*100:.0f}%")
@@ -263,8 +267,9 @@ for i in t3[t3.phi_P.notna()].sample(3, random_state=3).index:
     r = t3.loc[i]; e1 = {k: np.array([r[k]]) for k in ("phi_P", "phi_D", "phi_N")}; e1["eta"] = np.array([r["eta_hat"]])
     log("C3 · " + pe(e1, 0, 1 / (1 + np.exp(-zg[i]))))
 
-(MET / "fcx_results.txt").write_text("\n".join(LOG) + "\n", encoding="utf-8")
+OUT = MET / ("fcx_results_xgb.txt" if BACKEND == "xgb" else "fcx_results.txt")
+OUT.write_text("\n".join(LOG) + "\n", encoding="utf-8")
 c1.drop(columns=[c for c in c1 if c.startswith(("phiT_", "phiP_"))]).to_csv(INT / "fcx_c1.csv", index=False)
 c2.to_csv(INT / "fcx_c2.csv", index=False); t3.to_csv(INT / "fcx_c3.csv", index=False)
 imp.to_csv(INT / "fcx_c1_importance.csv")
-print(f"\nwrote {MET/'fcx_results.txt'}")
+print(f"\nwrote {OUT}")

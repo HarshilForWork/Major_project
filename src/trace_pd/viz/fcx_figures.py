@@ -8,7 +8,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 _ROOT = _Path(__file__).resolve().parents[3]
 INT, MET, FIG = _ROOT / "data/interim", _ROOT / "reports/metrics", _ROOT / "reports/figures"
-txt = (MET / "fcx_results.txt").read_text(encoding="utf-8")
+import sys
+_x = MET / "fcx_results_xgb.txt"
+SRC = _x if ("--backend" not in sys.argv and _x.exists()) or ("xgb" in sys.argv) else MET / "fcx_results.txt"
+txt = SRC.read_text(encoding="utf-8")
+print(f"reading {SRC.name}")
 num = lambda pat: float(re.search(pat, txt).group(1))
 imp = pd.read_csv(INT / "fcx_c1_importance.csv", index_col=0).head(10)[::-1]
 BLUE, GREEN, AMBER, GREY, NAVY = "#2a6ea8", "#2e7d4f", "#c98b2b", "#8a8a8a", "#14375e"

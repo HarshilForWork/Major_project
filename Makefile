@@ -1,4 +1,4 @@
-.PHONY: fcx help setup preprocess baseline xgboost ablation sporadic figures docs test all clean
+.PHONY: fcx c3 help setup preprocess baseline xgboost ablation sporadic figures docs test all clean
 
 PY := python
 
@@ -43,6 +43,9 @@ figures:
 fcx:
 	$(PY) src/trace_pd/evaluation/evaluate_fcx.py
 	$(PY) src/trace_pd/viz/fcx_figures.py
+
+c3:
+	$(PY) src/trace_pd/evaluation/validate_c3.py
 
 docs:
 	$(PY) src/trace_pd/data/export_dictionary.py

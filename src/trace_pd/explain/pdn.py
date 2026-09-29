@@ -16,12 +16,18 @@ Heads (trained on cheap features against targets built from the TRUE log-ratio):
   sigma(x)  : |l - eta| * sqrt(pi/2)   (mean-absolute-deviation -> SD)
   tau       : residual SD of eta_hat
 
-Faithfulness to the black-box transition model g3:
-  logit g3(x) ~= alpha + beta * logit p_pdn(x)        (2 parameters, structure kept)
-
-Attribution: exact Shapley over the three players {P, D, N} on
-  v(S) = alpha + beta * logit p_pdn(heads in S at the patient's value, others at reference)
-so phi_P + phi_D + phi_N = v(all) - v(none).
+Faithfulness to the black-box transition model g3 -- COMPONENT-CALIBRATED:
+  1. exact 3-player Shapley of the SURROGATE itself on logit p_pdn gives s_P, s_D, s_N
+     (heads in S at the patient's value, the others at a cohort reference)
+  2. regress the black box on those components:
+        logit g3(x) ~= alpha + b_P s_P(x) + b_D s_D(x) + b_N s_N(x)
+  3. black-box attribution:  phi_c = b_c * s_c(x)
+The black box now enters through one weight PER component, so two models that rely on
+different mechanisms get different explanations (checked by the planted-model test in
+evaluation/validate_c3.py). An earlier single-slope version, logit g3 ~ a + b logit p_pdn,
+gave nearly identical splits for any black box -- the shares were a property of the
+surrogate, not of the model being explained.
+Efficiency: phi_P + phi_D + phi_N = prediction - alpha - sum_c b_c s_c(reference) = pred - base.
 """
 import itertools
 import numpy as np
@@ -75,42 +81,52 @@ class PDNExplainer:
         H = self.heads(X) if H is None else H
         return flip_prob(H["eta"], H["tau"], H["mu"], H["sigma"])
 
-    def calibrate_fidelity(self, X, g3_prob):
-        """Least-squares fit of logit g3 on logit p_pdn; also stores reference head values."""
-        H = self.heads(X)
-        zp, zg = logit(self.p_pdn(H=H)), logit(g3_prob)
-        A = np.c_[np.ones_like(zp), zp]
-        self.alpha, self.beta = np.linalg.lstsq(A, zg, rcond=None)[0]
+    def _set_reference(self, H):
         self.ref = dict(eta=float(np.median(H["eta"])), tau=self.tau, mu=0.0,
                         sigma=float(np.median(H["sigma"])))
-        return self
 
-    def predict_logit(self, X=None, H=None):
-        return self.alpha + self.beta * logit(self.p_pdn(X, H))
-
-    def explain(self, X):
-        """Exact 3-player Shapley. Returns phi_P, phi_D, phi_N, base, full, plus heads."""
-        H = self.heads(X); n = len(X)
+    def surrogate_components(self, X=None, H=None):
+        """Exact Shapley of logit p_pdn over players P=(eta,tau), D=(mu), N=(sigma)."""
+        H = self.heads(X) if H is None else H; n = len(H["eta"])
         members = {"P": ("eta", "tau"), "D": ("mu",), "N": ("sigma",)}
+        cache = {}
         def v(S):
-            h = {k: (H[k] if any(k in members[p] for p in S) else np.full(n, self.ref[k]))
-                 for k in ("eta", "tau", "mu", "sigma")}
-            return self.predict_logit(H=h)
-        from math import factorial
-        players = ["P", "D", "N"]; cache = {}
-        def vv(S):
             key = frozenset(S)
-            if key not in cache: cache[key] = v(key)
+            if key not in cache:
+                h = {k: (H[k] if any(k in members[p] for p in key) else np.full(n, self.ref[k]))
+                     for k in ("eta", "tau", "mu", "sigma")}
+                cache[key] = logit(self.p_pdn(H=h))
             return cache[key]
-        phi = {p: np.zeros(n) for p in players}
+        from math import factorial
+        players = ["P", "D", "N"]; s = {p: np.zeros(n) for p in players}
         for p in players:
             others = [q for q in players if q != p]
             for k in range(3):
                 for S in itertools.combinations(others, k):
                     w = factorial(k) * factorial(3 - k - 1) / factorial(3)
-                    phi[p] += w * (vv(set(S) | {p}) - vv(set(S)))
-        return dict(phi_P=phi["P"], phi_D=phi["D"], phi_N=phi["N"],
-                    base=vv(set()), full=vv({"P", "D", "N"}), **H)
+                    s[p] += w * (v(set(S) | {p}) - v(set(S)))
+        return s, v(set())
+
+    def calibrate_fidelity(self, X, g3_prob):
+        """logit g3 ~ alpha + b_P s_P + b_D s_D + b_N s_N  (least squares on training rows)."""
+        H = self.heads(X); self._set_reference(H)
+        s, _ = self.surrogate_components(H=H)
+        A = np.c_[np.ones(len(X)), s["P"], s["D"], s["N"]]
+        coef = np.linalg.lstsq(A, logit(g3_prob), rcond=None)[0]
+        self.alpha, self.b = float(coef[0]), dict(P=float(coef[1]), D=float(coef[2]), N=float(coef[3]))
+        return self
+
+    def predict_logit(self, X=None, H=None):
+        s, _ = self.surrogate_components(X, H)
+        return self.alpha + sum(self.b[c] * s[c] for c in ("P", "D", "N"))
+
+    def explain(self, X):
+        H = self.heads(X)
+        s, _ = self.surrogate_components(H=H)
+        phi = {c: self.b[c] * s[c] for c in ("P", "D", "N")}
+        full = self.alpha + sum(phi.values())
+        return dict(phi_P=phi["P"], phi_D=phi["D"], phi_N=phi["N"], base=np.full(len(X), self.alpha),
+                    full=full, weights=dict(self.b), **H)
 
     @staticmethod
     def narrative(e, i, p_model):
