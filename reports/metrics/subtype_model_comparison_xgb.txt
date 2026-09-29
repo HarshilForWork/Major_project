@@ -1,0 +1,37 @@
+==============================================================================
+STEP 2 -- SUBTYPE CLASSIFIER (binary TD vs PIGD, per visit)
+==============================================================================
+Development : 4,002 visits / 351 patients (model selection ONLY)
+Locked test : 1,018 visits / 88 patients (used once, for the winner)
+Selection   : 5-fold StratifiedGroupKFold by PATNO, seed 42
+
+config                      CV bal.acc       sd  CV AUROC
+------------------------------------------------------------------------------
+logistic                        0.6932   0.0310    0.7523
+xgb_d4_lr0.03                   0.6876   0.0345    0.7466
+xgb_default                     0.6858   0.0308    0.7440
+xgb_d2_lr0.03                   0.6844   0.0404    0.7494
+xgb_missingness_ind             0.6842   0.0335    0.7449
+xgb_d3_lr0.03                   0.6829   0.0329    0.7491
+xgb_tuned_threshold             0.6815   0.0353    0.7440
+xgb_d2_lr0.08                   0.6782   0.0307    0.7409
+formula_aware                   0.6765   0.0321    0.7469
+xgb_d3_lr0.08                   0.6761   0.0264    0.7348
+xgb_d4_lr0.08                   0.6711   0.0363    0.7299
+lightgbm_default                0.6693   0.0306    0.7331
+------------------------------------------------------------------------------
+Winner by CV balanced accuracy: logistic
+
+LOCKED TEST (evaluated once; 200x patient-level bootstrap 95% CI)
+  balanced accuracy : 0.6934  [0.6472, 0.7384]
+  AUROC             : 0.7528  [0.6983, 0.8035]
+  majority baseline : 0.5000   (chance = 0.5000)
+  above chance      : YES
+
+WHAT DID NOT HOLD
+  - Spread across all 12 configs is 0.0239, comparable to the
+    per-fold sd, so the ranking between the top configs is not meaningful.
+  - Configs whose CV mean sits inside the winner's +/- 1 sd band are ties, not losses:
+    xgb_d4_lr0.03, xgb_default, xgb_d2_lr0.03, xgb_missingness_ind, xgb_d3_lr0.03, xgb_tuned_threshold, xgb_d2_lr0.08, formula_aware, xgb_d3_lr0.08, xgb_d4_lr0.08, lightgbm_default
+  - The locked-test CI is wide because it rests on only 88 patients.
+==============================================================================
