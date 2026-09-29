@@ -18,7 +18,7 @@ retrains.
 | **Label Engine** | Applies the Stebbins ratio to 11 tremor items and 5 PIGD items. TD if ≥ 1.15, PIGD if ≤ 0.90, Indeterminate between. A label is only assigned when all 16 items are present. |
 | **Leakage Guard** | Splits every column into permitted X / label-defining Y / banned, writes that split to the Feature Registry, and asserts at runtime that none of the 16 Y-defining items reach a model. |
 | **Training Matrix** | One row per patient-visit: permitted X plus subtype Y. |
-| **Visit-Pair Builder** | Takes the same rows and pairs each visit with the patient's next visit, producing `LABEL_FLIPPED_NEXT` (4,918 pairs). Only the transition head needs this. |
+| **Visit-Pair Builder** | Takes the same rows and pairs each visit with the patient's next visit, producing `LABEL_FLIPPED_NEXT` (4,818 pairs). Only the transition head needs this. |
 | **Model Trainer + Calibrator** | Two heads — subtype (single-visit rows) and transition (paired rows). Publishes both to the Model Registry. |
 
 ### The fork

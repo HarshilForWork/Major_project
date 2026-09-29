@@ -81,7 +81,7 @@ The LLM improves readability; it isn't a dependency.
 > unchanged. This patient has changed label once across five visits. Estimated probability of
 > a further change by the next visit is 14%, below the cohort rate of 29%.
 >
-> *Computed from 27 permitted features. The 16 MDS-UPDRS items that define the subtype label
+> *Computed from 26 permitted features. The 16 MDS-UPDRS items that define the subtype label
 > were excluded from the model.*
 
 What it does **not** say: no treatment recommendation, no invented mechanism, no number

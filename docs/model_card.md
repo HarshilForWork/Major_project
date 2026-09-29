@@ -41,9 +41,9 @@ Format after Mitchell et al., *Model Cards for Model Reporting* (FAT* 2019).
 |---|---|
 | Source | PPMI via LONI IDA, extract 16 Aug 2026 |
 | Cohort | 439 PD patients (242 sporadic, 197 genetic-cohort) |
-| Unit | patient-visit; 5,742 labelled rows |
+| Unit | patient-visit; 5,638 labelled rows |
 | Label | Stebbins et al. 2013 ratio over 16 MDS-UPDRS items |
-| Inputs | 27 `CHEAP_FEATURE` columns (`docs/data_dictionary.md`) |
+| Inputs | 26 `CHEAP_FEATURE` columns (`docs/data_dictionary.md`); `GENETIC_COHORT` removed |
 | Excluded | 19 label-defining columns (banned), 12 imaging / genetic columns (held out) |
 
 ## Evaluation
@@ -53,21 +53,23 @@ binary chance 0.500.
 
 | Setting | Logistic | Boosted |
 |---|---|---|
-| Baseline visit, 3-class | 0.442 | 0.456 |
-| All visits, 3-class | 0.487 | 0.457 |
-| All visits, TD vs PIGD | **0.707** | **0.705** |
-| **Sporadic, baseline visit, TD vs PIGD** (`GENETIC_COHORT` removed) | 0.584 | **0.530** |
+| Baseline visit, 3-class | 0.450 | 0.458 |
+| All visits, 3-class | 0.461 | 0.452 |
+| All visits, TD vs PIGD | **0.694** | **0.689** |
+| **Sporadic, baseline visit, TD vs PIGD** | 0.553 | **0.530** |
 
-Leakage positive control (formula items fed back in): 0.906 accuracy — confirms the pipeline
+Leakage positive control (formula items fed back in): 0.905 accuracy — confirms the pipeline
 works and the task is genuinely hard.
 
 ## Factors and subgroup behaviour
 
 | Factor | Finding |
 |---|---|
-| **Recruitment arm** | `GENETIC_COHORT` **alone** scores 0.629 on the binary task. Performance is partly recruitment structure. **Must be removed before clinical claims.** |
+| **Recruitment arm** | `GENETIC_COHORT` **alone** scored 0.629 on the binary task — **now removed from X**; removing it cost ~0.013 |
+| **Label fragility** | 39.5% of labels are one scoring point from a different label; conformal coverage is 84.8% on fragile visits vs 94.2% on robust ones |
+| **Exam medication state** | 25.6% of same-day OFF/ON exams give a different label; 1,730 labelled visits use an ON exam |
 | **Visit** | first-visit performance is much lower than pooled; pooling repeated visits inflates the numbers |
-| **Class** | Indeterminate (10.8%) is effectively unlearnable — 76% unstable visit to visit |
+| **Class** | Indeterminate (11.0%) is effectively unlearnable — 76% unstable visit to visit |
 | **Sex, age** | ⏳ fairness breakdown not yet run |
 
 ## Ethical considerations
@@ -84,7 +86,7 @@ works and the task is genuinely hard.
 
 ## Caveats and recommendations
 
-1. Remove `GENETIC_COHORT` and re-report every number.
+1. ~~Remove `GENETIC_COHORT`~~ — done 28 Sep.
 2. Report the sporadic first-visit result as the headline, not the pooled binary result.
 3. Run a sensitivity analysis excluding the 845 zero-PIGD edge-case rows.
 4. Run the fairness breakdown by sex and age.

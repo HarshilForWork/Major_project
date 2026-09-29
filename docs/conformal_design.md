@@ -141,7 +141,7 @@ One global `q̂` gives **marginal** coverage: "90% overall" can hold while the r
 systematically under-covered. The usual fix is **Mondrian (class-conditional) conformal**, with a
 separate `q̂` per class.
 
-Indeterminate is 10.8% of the data → ~9 calibration patients:
+Indeterminate is 11.0% of the data → ~9 calibration patients:
 
 ```
 rank = ⌈10 × 0.9⌉ = 9  →  q̂ = the LARGEST of 9 scores

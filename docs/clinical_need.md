@@ -110,7 +110,7 @@ is partial label leakage. The 10 Part II items that are **not** in the formula r
 
 **Yes.** PPMI does it by protocol. That cuts two ways:
 
-- **It's why we can train at all.** Every visit has a ground-truth label, so we have 5,742
+- **It's why we can train at all.** Every visit has a ground-truth label, so we have 5,638
   labelled rows.
 - **It weakens a "predict earlier" pitch.** Inside PPMI, the label is available from Visit 1.
   "Earlier" only means something in settings where the exam isn't done.

@@ -1,6 +1,6 @@
 # Transition Risk — Design
 
-**Status: target built and validated; model not trained.**
+**Status: target built and validated. Model built by Rutu (`models/train_transition.py`) — needs the fixes in README §9.6 and a re-run on the corrected data.**
 
 Transition risk is a **second supervised classifier**, not a rule. It estimates the probability
 that a patient's subtype label **changes by their next visit**.
@@ -36,27 +36,27 @@ One patient, as stored:
 Every row is therefore both a **subtype** training example (its own X, its own label) and — if
 it has a successor — a **transition** training example (its own X, `FLIPPED` as target).
 
-### Where 4,918 pairs come from
+### Where 4,818 pairs come from
 
 ```
-5,742 labelled rows
- −824 labelled rows with no usable next label
-=4,918 pairs
+5,638 labelled rows
+ −820 labelled rows with no usable next label
+=4,818 pairs
 ```
 
 | Why no pair | Rows |
 |---|---|
-| patient's final visit — no next row | 223 |
-| next visit exists but is unlabelled (not all 16 items completed) | 601 |
+| patient's final visit — no next row | 200 |
+| next visit exists but is unlabelled (not all 16 items completed) | 620 |
 
 ### Base rates
 
 | Current label | Flip rate | Pairs |
 |---|---|---|
-| TD | 20.9% | 2,744 |
-| PIGD | 27.1% | 1,629 |
-| Indeterminate | **76.3%** | 545 |
-| **Overall** | **29.1%** | **4,918** |
+| TD | 20.2% | 2,722 |
+| PIGD | 27.0% | 1,555 |
+| Indeterminate | **76.2%** | 541 |
+| **Overall** | **28.7%** | **4,818** |
 
 ---
 
@@ -99,9 +99,12 @@ when the appointment happens to be.
 the number means the same thing for every patient. Alternatively, take the planned follow-up
 interval as a user input at serving time.
 
-### Much of the 29% is boundary noise
+### Much of the 28.7% is boundary noise
 
-A large share of flips is Indeterminate churn: patients whose ratio sits in the 0.90–1.15 band
+**Now measured** (`notebooks/dia_feasibility.py`): 39.5% of labelled visits are one scoring point
+from a different label; those flip at the next visit 48.6% of the time vs 15.0% for robust
+visits, and fragility alone predicts the flip at **AUROC 0.77**. A large share of flips is
+Indeterminate churn: patients whose ratio sits in the 0.90–1.15 band
 and crosses it back and forth. That's measurement wobble as much as progression.
 
 Report flip risk **separately** for patients near the decision boundary and for those well

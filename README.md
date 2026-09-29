@@ -81,7 +81,7 @@ That framing forces the central design rule of the whole project:
 > **No column that participates in computing Y may be used for training.**
 
 A model allowed to see those items just re-does the arithmetic. As a deliberate check, we
-fed them back in and got **0.906 accuracy** — a meaningless number, because the model was
+fed them back in and got **0.905 accuracy** — a meaningless number, because the model was
 measuring nothing it didn't already have (§9.4).
 
 It also defines what the tool is for in practice: **triage**. If the model is confident, the
@@ -169,7 +169,7 @@ The switch also fixed the sample-size problem:
 | | Phase 1 (K-Means) | Phase 2 (TD/PIGD) |
 |---|---|---|
 | Patients | 229 | **439** |
-| Labelled training units | 229 (one per patient) | **5,742** (one per visit) |
+| Labelled training units | 229 (one per patient) | **5,638** (one per visit) |
 | Label origin | invented by clustering | published formula |
 | Follow-up filter | ≥ 3 years required | none needed |
 
@@ -233,9 +233,9 @@ it is the biggest single reason the sample grew.
 |---|---|
 | Shape | **6,922 rows × 75 columns** |
 | Patients | 439 (2–21 visits each, median 17) |
-| Rows with a label | **5,742** (83.0%) |
+| Rows with a label | **5,638** (81.5%) |
 | Duplicate `PATNO + EVENT_ID` | 0 — asserted in code |
-| Class balance (all visits) | TD 52.6% · PIGD 36.6% · Indeterminate 10.8% |
+| Class balance (all visits) | TD 53.5% · PIGD 35.5% · Indeterminate 11.0% |
 | Class balance (baseline) | TD 60.7% · PIGD 27.9% · Indeterminate 11.4% |
 
 **Why long format.** The label is computed per visit, and the flip target needs consecutive
@@ -250,13 +250,13 @@ from this table.
 | 1 | BL | **438** |
 | 2 | BL + 6 mo | 349 |
 | 3 | BL + 6 + 12 mo | 323 |
-| 4 | BL + 6 + 12 + 24 mo | 275 |
-| alt. annual-only | BL + 12 mo | 403 |
-| alt. annual-only | BL + 12 + 24 mo | **343** |
+| 4 | BL + 6 + 12 + 24 mo | 269 |
+| alt. annual-only | BL + 12 mo | 402 |
+| alt. annual-only | BL + 12 + 24 mo | **337** |
 
 The 6-month visit is the weak link (438 → 349). It's a lighter interim visit in the PPMI
-protocol. An **annual-only** design (BL → 12 → 24 mo) keeps 343 patients at the final round
-instead of 275, with fuller instrument coverage. **Recommended for the round experiments.**
+protocol. An **annual-only** design (BL → 12 → 24 mo) keeps 337 patients at the final round
+instead of 269, with fuller instrument coverage. **Recommended for the round experiments.**
 
 ### 4.5 A bug we found and fixed: medications
 
@@ -297,6 +297,25 @@ Part III is sometimes scored twice at one visit, OFF and ON medication. Medicati
 suppresses tremor, which can shift the ratio and flip the label. **We keep the OFF-state
 assessment** (untreated severity). `PDSTATE_USED` records which state was used for each row.
 
+### 4.8 A second bug we found and fixed: numeric missing-data codes
+
+PPMI writes two "not a score" answers as **numbers**:
+
+| Instrument | Code | Means | What went wrong |
+|---|---|---|---|
+| MDS-UPDRS Part III (label items, `NHY`) | **101** | unable to rate | averaged into the tremor / PIGD score as if it were a severity of 101 |
+| SCOPA-AUT (feature) | **9** | not applicable | summed into `SCOPA_AUT_TOTAL`, adding 9 points of fake autonomic burden each time |
+
+The preprocessing replaced the *text* code `UR` but not these numeric ones. **104 labelled
+visits (77 patients) had a wrong label, and 98 of them were forced to PIGD**, because a 101 in
+postural stability inflates the PIGD score. The "0 mismatches" check didn't catch it: it
+recomputed the label from the same contaminated scores, so it proved the arithmetic was
+consistent, not that the inputs were valid.
+
+**Fixed 30 Sep 2026:** both codes are converted to missing before any score is computed, and two
+contract tests now fail if either code ever reaches the data. Labelled visits went from 5,742
+to 5,638. Model results barely moved (§9).
+
 ---
 
 ## 5. The label (Y)
@@ -336,15 +355,19 @@ Computed per patient-visit, following **Stebbins et al. (2013)**.
 - PIGD = 0, tremor > 0 → **TD** (tremor present, no gait signs)
 - PIGD = 0, tremor = 0 → **Indeterminate** (nothing on either side)
 
-This affects **845 rows (14.7%)**. It is our explicit convention, so it has to be stated in
+This affects **845 rows (15.0%)**. It is our explicit convention, so it has to be stated in
 the paper.
 
 **Completeness rule:** a label is assigned only when **all 16 items are present**. We never
-compute a label from a partial average. That's why 17% of rows have no label.
+compute a label from a partial average. That's why 18.5% of rows have no label.
+
+**Missing-data codes:** PPMI records *unable to rate* in Part III as the number **101**. It is
+converted to missing before the formula runs, so those visits stay unlabelled. It was
+originally missed — see §4.8.
 
 **Verified:** every label was recomputed independently from its component scores — **0
-mismatches across 5,742 rows**. The class boundaries land exactly where they should (PIGD
-max 0.892; Indeterminate 0.909–1.136; TD min 1.162).
+mismatches across 5,638 rows**. The class boundaries land exactly where they should (PIGD
+max 0.868; Indeterminate 0.909–1.136; TD min 1.162).
 
 ### Second target: will the label flip?
 
@@ -354,17 +377,17 @@ a patient's last visit never borrows the next patient's first.
 
 | Current label | Flip rate at next visit | Pairs |
 |---|---|---|
-| TD | 20.9% | 2,744 |
-| PIGD | 27.1% | 1,629 |
-| Indeterminate | **76.3%** | 545 |
-| **Overall** | **29.1%** | **4,918** |
+| TD | 20.2% | 2,722 |
+| PIGD | 27.0% | 1,555 |
+| Indeterminate | **76.2%** | 541 |
+| **Overall** | **28.7%** | **4,818** |
 
-**Where 4,918 comes from:** 5,742 labelled rows − 223 final visits (no next row) − 601 rows
-whose next visit is unlabelled = 4,918 pairs.
+**Where 4,818 comes from:** 5,638 labelled rows − 200 final visits (no next row) − 620 rows
+whose next visit is unlabelled = 4,818 pairs.
 
-The 29.1% overall rate is consistent with the published "a third to half reclassified within
-1–2 years", which independently suggests the formula was implemented correctly. **355 of 439
-patients (80.9%) change label at least once.**
+The 28.7% overall rate is consistent with the published "a third to half reclassified within
+1–2 years", which independently suggests the formula was implemented correctly. **344 of 439
+patients (78.4%) change label at least once.**
 
 Full transition design — features, pitfalls, fixed-horizon recommendation:
 [`docs/transition_risk_design.md`](docs/transition_risk_design.md).
@@ -382,15 +405,15 @@ column ever lands in a feature bucket.
 
 | Bucket | Columns | Used for training? |
 |---|---|---|
-| `CHEAP_FEATURE` | **27** | ✅ **Yes — this is X** |
+| `CHEAP_FEATURE` | **26** | ✅ **Yes — this is X** |
 | `RESOURCE_DEPENDENT_FEATURE` | 12 | ❌ No — imaging / genetics |
 | `BANNED_LABEL_DEFINING` | 19 | ❌ **Never** — they define Y |
 | `TARGET` | 8 | ❌ No — outcomes |
 | `KEY` | 4 | ❌ No — identifiers |
-| `ADMIN` | 5 | ❌ No — bookkeeping |
+| `ADMIN` | 6 | ❌ No — bookkeeping (incl. `GENETIC_COHORT`) |
 | **Total** | **75** | |
 
-### 6.1 ✅ What goes into X — 27 `CHEAP_FEATURE` columns
+### 6.1 ✅ What goes into X — 26 `CHEAP_FEATURE` columns
 
 "Cheap" means: patient-reported or low-cost, and plausibly available in a non-specialist
 clinic.
@@ -402,7 +425,6 @@ clinic.
 | | `HANDED` | handedness | Demographics |
 | **Disease timeline** | `YRS_SINCE_DIAGNOSIS` | years from diagnosis to this visit | derived: PD Diagnosis History + visit date |
 | | `YRS_SINCE_SYMPTOM_ONSET` | years from first symptom to this visit | derived: PD Diagnosis History + visit date |
-| **Recruitment** | `GENETIC_COHORT` | 1 if recruited into PPMI's genetic arm | derived: Subject Cohort History ⚠️ see §9.3 |
 | **Medication** | `LEDD_TOTAL_MG` | total levodopa-equivalent daily dose active on visit date | LEDD log, date-interval join |
 | | `N_CONMEDS` | number of concomitant medications active on visit date | Concomitant Med log, date-interval join |
 | | `PDTRTMNT` | on PD treatment at this visit (yes/no) | MDS-UPDRS Part III header |
@@ -475,13 +497,13 @@ where this tool is meant to be used**. Survey evidence shows ~94% of Indian clin
 order DaTscan (94.4%) or genetic testing (94.9%). A model that needs them solves a different
 problem. They can be tested later as a separate "with imaging / genetics" variant.
 
-### 6.4 ❌ Outcomes, identifiers, bookkeeping — 17 columns
+### 6.4 ❌ Outcomes, identifiers, bookkeeping — 18 columns
 
 | Bucket | Columns | Why not X |
 |---|---|---|
 | `TARGET` (8) | `LABEL`, `TREMOR_SCORE`, `PIGD_SCORE`, `TD_PIGD_RATIO`, `NEXT_LABEL`, `LABEL_FLIPPED_NEXT`, `NEXT_VISIT_MONTH`, `MONTHS_TO_NEXT_VISIT` | these **are** the answer, or computed from it |
 | `KEY` (4) | `PATNO`, `EVENT_ID`, `VISIT_MONTH`, `INFODT` | identifiers and join keys |
-| `ADMIN` (5) | `COHORT`, `APPRDX`, `PDDXDT`, `SXDT`, `PDSTATE_USED` | provenance; the dates are used only to derive the timeline features |
+| `ADMIN` (6) | `COHORT`, `APPRDX`, `GENETIC_COHORT`, `PDDXDT`, `SXDT`, `PDSTATE_USED` | provenance; the dates are used only to derive the timeline features. `GENETIC_COHORT` was in X until 28 Sep — see §9.3 |
 
 `MONTHS_TO_NEXT_VISIT` deserves a note: it's only known **after** the next visit happens, so
 it can never be a feature at prediction time.
@@ -502,16 +524,18 @@ Every material decision, what we picked, and why.
 | 6 | Medication join | date interval | `PATNO + EVENT_ID` | key join matched nothing — LEDD was 100% missing |
 | 7 | Missing data | leave as `NaN` | median imputation | imputation flattened DaTscan; pre-split imputation leaks |
 | 8 | Partial labels | only if all 16 items present | mean of available items | a partial mean isn't the published formula |
-| 9 | Ratio undefined (PIGD = 0) | TD if tremor > 0, else Indeterminate | drop rows | explicit, stated convention; 14.7% of rows |
+| 9 | Ratio undefined (PIGD = 0) | TD if tremor > 0, else Indeterminate | drop rows | explicit, stated convention; 15.0% of rows |
 | 10 | **Leakage policy** | **strict: ban all 16 items + 3 encoders** | Variant A (allow 3 Part II items) | any overlap with Y undermines the result |
 | 11 | Imaging / genetics | held out of X | include | not available in target settings |
 | 12 | Feature selection | by bucket, machine-enforced | hand-picked list | removes human error; test-guarded |
 | 13 | Data format | long, one row per patient-visit | wide per patient | supports per-visit labels and the flip target; wide rounds built downstream |
 | 14 | Cross-validation | `StratifiedGroupKFold` by `PATNO` | random row split | ~17 rows per patient — a row split puts the same patient in train and test |
-| 15 | Class imbalance | balanced sample weights, per-class metrics | plain accuracy | 10.8% Indeterminate hides behind aggregate accuracy |
+| 15 | Class imbalance | balanced sample weights, per-class metrics | plain accuracy | 11.0% Indeterminate hides behind aggregate accuracy |
 | 16 | Headline metric | balanced accuracy + macro-F1 | accuracy | majority-class baseline already scores 0.607 accuracy |
 | 17 | Indeterminate | reported, and binary TD vs PIGD run separately | forced 3-class only | it's a 0.90–1.15 band, 76% unstable visit to visit |
 | 18 | Transition model | separate head trained on visit pairs | same model as subtype | different unit (pairs) and a different question |
+| 19 | `GENETIC_COHORT` | moved to ADMIN, out of X | keep as feature | a recruitment-arm flag that alone scored 0.629 — design signal, not physiology |
+| 20 | PPMI numeric missing codes | `101` (Part III) and `9` (SCOPA-AUT) → NaN | treat as scores | they are *unable to rate* / *not applicable*, not severities |
 
 ---
 
@@ -538,10 +562,10 @@ Every material decision, what we picked, and why.
 | # | Experiment | Rows | Purpose |
 |---|---|---|---|
 | 1 | Baseline visit only, 3-class | 438 patients | the actual first-visit use case |
-| 2 | All visits pooled, 3-class | 5,742 rows | more data, but repeated measures |
-| 3 | All visits, **TD vs PIGD** | 5,122 rows | drop the unstable Indeterminate band |
-| 4 | **Leakage positive control** | 5,742 rows | deliberately feed the banned items back in |
-| 5 | Ablation (binary) | 5,122 rows | which feature groups carry the signal |
+| 2 | All visits pooled, 3-class | 5,638 rows | more data, but repeated measures |
+| 3 | All visits, **TD vs PIGD** | 5,020 rows | drop the unstable Indeterminate band |
+| 4 | **Leakage positive control** | 5,638 rows | deliberately feed the banned items back in |
+| 5 | Ablation (binary) | 5,020 rows | which feature groups carry the signal |
 | 6 | **Sporadic PD, baseline only** (binary) | 216 patients | hardest honest test: no genetic flag, no repeated visits |
 
 ---
@@ -550,81 +574,136 @@ Every material decision, what we picked, and why.
 
 Balanced accuracy. **3-class chance = 0.333, binary chance = 0.500.**
 
+> **Data version.** Numbers below are from the corrected dataset (§4.8) with
+> `GENETIC_COHORT` removed from X (26 features). Items marked ⏳ were produced before the §4.8
+> fix and must be re-run with `xgboost` installed (`make xgboost ablation conformal transition`).
+
 ### 9.1 Main experiments
 
 | Experiment | Majority | Logistic | Boosted trees |
 |---|---|---|---|
-| 1 — baseline visit only, 3-class | 0.333 | 0.442 | 0.456 |
-| 2 — all visits, 3-class | 0.333 | 0.487 | 0.457 |
-| 3 — all visits, **TD vs PIGD** | 0.500 | **0.707** | **0.705** |
+| 1 — baseline visit only, 3-class | 0.333 | 0.450 | 0.458 |
+| 2 — all visits, 3-class | 0.333 | 0.461 | 0.452 |
+| 3 — all visits, **TD vs PIGD** | 0.500 | **0.694** | **0.689** |
 
-Source: `reports/metrics/baseline_model_results.txt`.
-
-> The boosted-tree column in the committed metric files was produced with sklearn's
-> `HistGradientBoostingClassifier` (the XGBoost wheel wasn't available in the build
-> environment). Running real XGBoost locally reproduced these within **0.003**.
-> `make xgboost` on a machine with `xgboost` installed overwrites
-> `baseline_model_results_xgb.txt` with the true XGBoost run.
+Source: `reports/metrics/baseline_model_results.txt`. Boosted trees here =
+`HistGradientBoostingClassifier`. Rutu's real-XGBoost run (pre-fix, 26 features) gave
+0.451 / 0.462 / 0.690 — ⏳ re-run pending.
 
 ### 9.2 The hardest honest test
 
-Sporadic patients, **baseline visit only**, `GENETIC_COHORT` removed, binary TD vs PIGD.
-**216 patients**, of whom only 41 are PIGD.
+Sporadic patients, **baseline visit only**, binary TD vs PIGD. **216 patients**, of whom only
+41 are PIGD.
 
 | Model | Balanced accuracy | Macro-F1 |
 |---|---|---|
-| Logistic | 0.584 ± 0.056 | 0.561 |
-| Boosted trees | **0.530 ± 0.038** | 0.531 |
+| Logistic | 0.553 ± 0.053 | 0.534 |
+| Boosted trees | **0.530 ± 0.042** | 0.532 |
 
 Source: `reports/metrics/sporadic_baseline_results.txt` (`make sporadic`).
 
-**This is close to chance.** It's the real first-visit use case, and today the model can
-barely do it. MoCA is 0% present at baseline in this subset, and 41 PIGD patients is very
-little to learn from.
+**This is close to chance.** It's the real first-visit use case, and today the model can barely
+do it. MoCA is 0% present at baseline in this subset, and 41 PIGD patients is very little to
+learn from.
 
-### 9.3 Ablation — where the signal comes from
+### 9.3 Ablation — where the signal comes from ⏳
 
-Binary TD vs PIGD, all visits.
+Binary TD vs PIGD, all visits, XGBoost. Rutu's 28 Sep run, **before the §4.8 fix** — re-run pending.
 
 | Configuration | Features | Balanced acc |
 |---|---|---|
-| Full | 27 | 0.701 |
-| Drop `GENETIC_COHORT` | 26 | 0.685 |
-| Drop axial items (`NP2RISE`, `NP2TURN`) | 25 | 0.691 |
-| Drop medication features | 24 | 0.684 |
-| Drop all three groups above | 21 | 0.667 |
-| Drop all Part II items | 17 | 0.681 |
-| Only Part II items | 10 | 0.647 |
-| Only the 2 axial items | 2 | 0.633 |
+| **Full (26 features, `GENETIC_COHORT` removed)** | 26 | **0.690** |
+| Reference: + `GENETIC_COHORT` | 27 | 0.703 |
+| Drop axial items (`NP2RISE`, `NP2TURN`) | 24 | 0.681 |
+| Drop medication features | 23 | 0.673 |
+| Drop axial + medication | 21 | 0.669 |
+| Drop all Part II items | 16 | 0.674 |
+| Only Part II items | 10 | 0.642 |
+| Only the 2 axial items | 2 | 0.640 |
 | **Only `GENETIC_COHORT`** | **1** | **0.629** |
 
 Source: `reports/metrics/ablation_results.txt`.
 
 **Two findings to be upfront about:**
 
-1. **`GENETIC_COHORT` alone scores 0.629.** It's a PPMI **recruitment-arm flag**, not a
-   clinical measurement. The genetic arm has a different TD/PIGD mix by design, so the model
-   partly learns *"which arm was this patient recruited into"*. It should be **removed from
-   X** before any clinical claim is made.
-2. **`NP2RISE` and `NP2TURN` are top predictors.** Getting out of a chair and turning in bed
-   are **axial** functions, the same construct the PIGD score measures. They aren't formula
-   items, so they aren't banned, but they're plausible **proxy leakage**. We disclose it
-   rather than defend it.
+1. **`GENETIC_COHORT` alone scored 0.629.** It's a PPMI **recruitment-arm flag**, not a clinical
+   measurement — the genetic arm has a different TD/PIGD mix by design. It has been **removed
+   from X**. Removing it cost only about 0.013, so the binary result doesn't depend on it.
+2. **`NP2RISE` and `NP2TURN` are top predictors.** Getting out of a chair and turning in bed are
+   **axial** functions — the same construct the PIGD score measures. They aren't formula items,
+   so they aren't banned, but they're plausible **proxy leakage**. We disclose it rather than
+   defend it.
 
 ### 9.4 Leakage positive control
 
-With the 16 formula items fed back in, the same pipeline reaches **0.906 accuracy / 0.846
-macro-F1**. That confirms two things: the pipeline is wired correctly, and the low scores
-above reflect a **genuinely hard task**, not a bug. It's also exactly the meaningless number
-the strict policy exists to prevent.
+With the 16 formula items fed back in, the same pipeline reaches **0.905 accuracy / 0.842
+macro-F1**. That confirms the pipeline is wired correctly, and that the low scores above reflect
+a **genuinely hard task**, not a bug. It's exactly the meaningless number the strict policy
+exists to prevent.
 
-### 9.5 Bottom line
+### 9.5 Conformal confidence ⏳
 
-- The **binary TD vs PIGD** task is learnable from cheap data (~0.70), but part of that
-  comes from recruitment structure and axial items.
+Rutu's 28 Sep run (`reports/metrics/conformal_results.txt`), **before the §4.8 fix**:
+
+| Task | Method | Coverage | Singleton sets |
+|---|---|---|---|
+| TD vs PIGD | **LAC** | 89.3% | 49.1% |
+| 3-class | **LAC** | 89.1% | 12.6% |
+| TD vs PIGD | APS | 99.0% ⚠️ | 7.9% |
+
+⚠️ **The APS numbers come from a bug.** Calibration uses the randomised APS score but
+prediction uses the non-randomised rule, so sets are too large. On perfectly calibrated
+synthetic probabilities this implementation covers 97.9% instead of 90%; a consistent version
+covers 90.8%. **LAC is correct and is what the pipeline uses.** On the corrected data, an HGB +
+LAC check gave **90.1% coverage and 45.2% singletons** on TD vs PIGD.
+
+**Coverage is not uniform.** On visits whose label sits close to the threshold (§9.7), coverage
+drops to **84.8%**, against 94.2% on robust visits. The 90% guarantee is marginal, and it hides
+this subgroup.
+
+### 9.6 Transition risk ⏳
+
+Rutu's 28 Sep run (`reports/metrics/transition_results.txt`), **before the §4.8 fix**:
+
+| Target | Base rate | ROC-AUC | Balanced acc | Brier | Brier of always predicting the base rate |
+|---|---|---|---|---|---|
+| Next visit | 29.1% | 0.647 | 0.590 | 0.227 | **0.206** — the model is worse |
+| Within 12 months | 42.5% | 0.656 | 0.603 | 0.230 | 0.244 |
+
+**Known problems, to fix before these numbers are used:**
+
+- **Upstream probabilities are in-sample.** The subtype model that produces the `PROB_*`
+  features was trained on 80% of patients, then scored all of them. These need to be
+  out-of-fold predictions.
+- **Probabilities aren't calibrated.** Balanced sample weights push them toward 0.5, which is
+  why next-visit Brier is worse than a constant.
+
+### 9.7 Label fragility — what transitions actually are
+
+From `notebooks/dia_feasibility.py` (corrected data):
+
+| Finding | Value |
+|---|---|
+| Visits where changing **one** item by ±1 flips the label | **39.5%** |
+| Next-visit flip rate: fragile vs robust visits | **48.6% vs 15.0%** |
+| **Fragility alone** as a predictor of the next-visit flip | **AUROC 0.77** — beats the 40-feature transition model (0.65) |
+| Same-day OFF / ON medication exams that give a **different** label | **25.6%** of 2,116 pairs |
+| Flip rate when the exam state goes OFF → ON between visits | 35.9% (vs 28.2% OFF → OFF), mostly TD → PIGD |
+
+**Interpretation:** much of what we call "transition risk" is the label wobbling across a
+threshold under ordinary rater noise, or the exam's medication state changing. It isn't
+necessarily the disease changing subtype. Fragility is computed from the banned items, so it's
+an **explanation**, not a deployable feature. See `docs/novelty_feasibility_results.md`.
+
+### 9.8 Bottom line
+
+- The **binary TD vs PIGD** task is learnable from cheap data (~0.69), with `GENETIC_COHORT`
+  removed. Part of the signal still comes from the axial items.
 - **Three-class** prediction sits near 0.46: Indeterminate can't be separated.
 - **First-visit prediction for sporadic patients is near chance (~0.53).** It's the most
   important clinical case, and it isn't solved.
+- **Four in ten labels sit one scoring point from a different label**, and that fragility
+  explains subtype "transitions" better than any model we've trained (§9.7).
 
 ---
 
@@ -771,45 +850,60 @@ Preprocessing is **deterministic** — no random seeds — so the same raw extra
 `ppmi_tdpigd_long.csv` byte for byte.
 
 **Contract tests** (`make test`) check: shape 6,922 × 75 · 439 patients · no duplicate
-visits · valid label values · 5,742 labelled rows · 4,918 transition pairs · **no
-label-defining column is a feature** · every label reproduces from its component scores.
+visits · valid label values · 5,638 labelled rows · 4,818 transition pairs · **no
+label-defining column is a feature** · **`GENETIC_COHORT` is not a feature** · every label
+reproduces from its component scores · **no `101` code in any label item** · **no `9` code in
+SCOPA-AUT**.
 
 ---
 
 ## 13. Status
 
-| Component | State |
-|---|---|
-| Ingestion, preprocessing, label engine | ✅ built, verified (0 label mismatches) |
-| Leakage guard + feature registry | ✅ built, test-guarded |
-| Subtype classifier | ✅ built, evaluated (§9) |
-| Transition target (`LABEL_FLIPPED_NEXT`) | ✅ built, validated |
-| Transition-risk model | ⏳ designed, not trained |
-| Conformal confidence | ⏳ designed, not built |
-| Longitudinal tracker | ⏳ designed, not built |
-| Explanation orchestrator | ⏳ designed, not built |
+| Component | State | Owner / note |
+|---|---|---|
+| Ingestion, preprocessing, label engine | ✅ built; **missing-code bug fixed 30 Sep** (§4.8) | Harshil |
+| Leakage guard + feature registry | ✅ built, test-guarded; `GENETIC_COHORT` removed | Harshil, Rutu |
+| Subtype classifier | ✅ built, evaluated on corrected data (§9.1–9.4) | |
+| Conformal confidence | 🟡 built; LAC correct, **APS has a bug**; ⏳ re-run on corrected data | Rutu |
+| Transition-risk model | 🟡 built; **in-sample upstream features, uncalibrated**; ⏳ re-run | Rutu |
+| Longitudinal tracker | 🟡 built; first-visit deltas are 0.0 at serving vs NaN in training | Rutu |
+| Explanation orchestrator | 🟡 built as a template; **validator is a no-op**, raw-scale delta sorting | Rutu |
+| Inference pipeline + demo | ✅ built; `--patient-id` not wired | Rutu |
+| Explainability novelty | 🔬 research stage — `docs/novelty_feasibility_results.md` | Harshil |
 
 **Next steps, in priority order:**
 
-1. Remove `GENETIC_COHORT` from X and re-report every result.
-2. Improve first-visit performance for sporadic patients — the use case that matters most.
-3. Build conformal calibration. Use a patient-level calibration split with one row per
-   patient, because repeated visits break exchangeability.
-4. Train the transition model on a fixed horizon ("flips within 12 months") instead of
-   "next visit", so the target means the same thing for every patient.
-5. Sensitivity analysis excluding the 845 zero-PIGD edge-case rows.
+1. **Re-run everything that needs `xgboost`** on the corrected data:
+   `make xgboost ablation conformal transition`, then `make test`.
+2. **Fix the conformal APS bug.** Use the same score function at prediction as at calibration.
+3. **Make the transition model's upstream features out-of-fold**, and calibrate its
+   probabilities (or drop balanced weights).
+4. **Fix the orchestrator:** make the validator actually reject, rank deltas on a common scale,
+   and give each feature the right "worse" direction.
+5. **Decide on the medication-state issue (§9.7):** label OFF-state exams only, or stratify.
+6. **Pick the explainability contribution** — "flip anatomy" is the current lead. Run its
+   novelty search first.
+7. Sensitivity analysis excluding the 845 zero-PIGD edge-case rows.
+8. Update the paper draft and slides with the corrected numbers.
 
 ---
 
 ## 14. Limitations
 
-- **First-visit prediction for sporadic patients is near chance** (0.53 boosted, 0.58 logistic).
+- **First-visit prediction for sporadic patients is near chance** (0.53 boosted, 0.55 logistic).
 - **Three-class performance is weak**; only the binary task is usable today.
-- **`GENETIC_COHORT` alone scores 0.629**: recruitment signal, not clinical signal.
+- **Recruitment structure** (`GENETIC_COHORT` alone scored 0.629) — now removed from X, but the
+  genetic arm's different subtype mix still sits in the data.
 - **Axial Part II items** (`NP2RISE`, `NP2TURN`) are plausible proxy leakage.
 - **Item-sum totals** for SCOPA-AUT, GDS, STAI, Epworth and RBD are not the validated
   instrument scores.
-- **Zero-PIGD edge case** covers 14.7% of labelled rows and rests on our convention.
+- **Zero-PIGD edge case** covers 15.0% of labelled rows and rests on our convention.
+- **The label mixes medication states.** 1,730 labelled visits use an ON exam and 1,331 have
+  unknown state; 25.6% of same-day OFF/ON pairs disagree on the label.
+- **Many labels are fragile.** 39.5% are one scoring point from a different label, so a
+  large part of visit-to-visit instability is measurement noise near the threshold.
+- **Marginal conformal coverage hides a weak subgroup**: 84.8% on fragile visits vs 94.2% on
+  robust ones.
 - **Conformal prediction** assumes exchangeability, which ~17 correlated visits per patient
   violate.
 - **Class-conditional conformal for Indeterminate isn't feasible**: ~9 calibration patients
@@ -851,6 +945,10 @@ Sections: 1 Introduction · 2 Literature Survey (2.1–2.7 + synthesis) · 3 Pro
   `reports/figures/fig_HLD_system_architecture`; check that it's the one embedded in §6
 - **Fixed** bullet numbering that ran on across sections
 
+**Updated 30 Sep 2026:** all §5 numbers corrected after the missing-code fix (§4.8), a
+"Missing-data codes" methods paragraph added, and `GENETIC_COHORT` marked as excluded in the
+column inventory.
+
 **Still open in the paper:**
 
 - **13 of 15 references read "Author(s) not specified".** Verified citations exist for 7
@@ -871,6 +969,9 @@ Sections: 1 Introduction · 2 Literature Survey (2.1–2.7 + synthesis) · 3 Pro
 - Slide 4 said "What is STRIDE?" → **TRACE-PD**
 - **Thank You** slide added
 - References slide left empty, as requested
+- **30 Sep:** numbers on slides 8, 10 and 11 corrected; the slide-10 figure regenerated from the
+  data. ⚠️ **Slide 9's column-table image still lists `GENETIC_COHORT` as a predictor.** Its
+  source isn't in the repo, so it needs re-making by hand.
 
 ### Figures — `reports/figures/`
 
@@ -902,6 +1003,9 @@ Every figure is regenerated by `make figures` from `src/trace_pd/viz/`.
 | `data_dictionary.md` | all 75 columns — bucket, description, source, type, % present (**generated**) |
 | `model_card.md` | intended use, out-of-scope use, metrics, subgroup behaviour, ethical considerations |
 | `glossary.md` | clinical and ML terms, for readers from either side |
+| `explainability_novelty_research.md` | prior-art review for the explainability contribution |
+| `novelty_feasibility_results.md` | experiments on the candidates; label fragility and medication-state findings |
+| `NEXT_STEPS_RUTU.md` | review of the 28 Sep commit and the ordered fix list |
 | `proposals/` | original proposal + renewed approach, with a promise-by-promise trace to what was built |
 
 ---

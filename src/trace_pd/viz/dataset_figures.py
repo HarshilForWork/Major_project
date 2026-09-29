@@ -15,6 +15,32 @@ _FIGURES   = _ROOT / "reports" / "figures"
 for _d in (_PROCESSED, _METRICS, _FIGURES):
     _d.mkdir(parents=True, exist_ok=True)
 
+# ---------------------------------------------------------------------------
+# Every number on these figures is computed from the processed data, never
+# typed in, so the figures cannot drift from the dataset again.
+# ---------------------------------------------------------------------------
+import re as _re
+import pandas as _pd
+_df = _pd.read_csv(_PROCESSED / "ppmi_tdpigd_long.csv", low_memory=False)
+_dd = _pd.read_csv(_PROCESSED / "ppmi_tdpigd_dictionary.csv")
+_L = _df[_df.LABEL.notna()]
+N_ROWS, N_LAB = len(_df), len(_L)
+PCT_LAB = N_LAB / N_ROWS * 100
+N_PAT, N_PAT_LAB = _df.PATNO.nunique(), _L.PATNO.nunique()
+N_FEAT = int((_dd.bucket == "CHEAP_FEATURE").sum())
+_cls = ["TD", "PIGD", "INDETERMINATE"]
+CLS_N = [int((_L.LABEL == c).sum()) for c in _cls]
+CLS_PCT = [round(n / N_LAB * 100, 1) for n in CLS_N]
+_f = _df[_df.LABEL_FLIPPED_NEXT.notna()]
+N_PAIRS = len(_f)
+FLIP_PCT = [round(_f.loc[_f.LABEL == c, "LABEL_FLIPPED_NEXT"].mean() * 100, 1) for c in _cls] + \
+           [round(_f.LABEL_FLIPPED_NEXT.mean() * 100, 1)]
+_r = _L[_L.VISIT_MONTH.isin([0, 6, 12, 24])].groupby("PATNO").VISIT_MONTH.nunique()
+N_ROUND4 = int((_r == 4).sum())
+_m = _re.search(r"Y-defining items included -> accuracy ([0-9.]+)",
+                (_METRICS / "baseline_model_results.txt").read_text(encoding="utf-8"))
+POS_CTRL = _m.group(1) if _m else "n/a"
+
 
 NAVY = "#1a3a5c"; BLUE = "#2a6ea8"; GREEN = "#2e7d4f"; RED = "#b3352e"
 AMBER = "#c98a2a"; GREY = "#5a5a5a"
@@ -93,7 +119,7 @@ box(ax, 2, 17.5, 44, 10,
     LRED, RED, 8.8, False)
 arrow(ax, (24, 30), (24, 27.5), color=RED)
 
-box(ax, 7, 8, 34, 6.5, "Y  =  TD / PIGD / Indeterminate\n5,742 labelled visits (83.0%)",
+box(ax, 7, 8, 34, 6.5, f"Y  =  TD / PIGD / Indeterminate\n{N_LAB:,} labelled visits ({PCT_LAB:.1f}%)",
     LRED, RED, 9, True)
 arrow(ax, (24, 17.5), (24, 14.5), color=RED)
 
@@ -111,7 +137,7 @@ box(ax, 54, 17.5, 44, 10,
     LAMBER, AMBER, 8.8, False)
 arrow(ax, (76, 30), (76, 27.5), color=GREEN)
 
-box(ax, 59, 8, 34, 6.5, "X  =  27 permitted features",
+box(ax, 59, 8, 34, 6.5, f"X  =  {N_FEAT} permitted features",
     LGREEN, GREEN, 9, True)
 arrow(ax, (76, 17.5), (76, 14.5), color=GREEN)
 
@@ -120,7 +146,7 @@ box(ax, 30, 1, 40, 5, "MODEL TRAINING   (X → Y)", LGREY, NAVY, 10, True, NAVY)
 arrow(ax, (24, 8), (40, 6), color=RED)
 arrow(ax, (76, 8), (60, 6), color=GREEN)
 
-ax.text(76, 16.0, "verified: including the banned items → accuracy 0.906 (meaningless)",
+ax.text(76, 16.0, f"verified: including the banned items → accuracy {POS_CTRL} (meaningless)",
         fontsize=7.8, color=AMBER, ha="center", va="center", style="italic")
 
 plt.tight_layout()
@@ -138,9 +164,9 @@ fig, axes = plt.subplots(1, 3, figsize=(13.6, 4.5),
 ax = axes[0]
 stages = [
     ("Enrolled subjects\nin PPMI extract", 935, LGREY, GREY),
-    ("PD cohort\n(COHORT == 1)", 439, LBLUE, BLUE),
-    ("Patients with a\ncomputable label", 439, LBLUE, BLUE),
-    ("Patients usable at\nall 4 visit rounds", 275, LGREEN, GREEN),
+    ("PD cohort\n(COHORT == 1)", N_PAT, LBLUE, BLUE),
+    ("Patients with a\ncomputable label", N_PAT_LAB, LBLUE, BLUE),
+    ("Patients usable at\nall 4 visit rounds", N_ROUND4, LGREEN, GREEN),
 ]
 ax.set_xlim(0, 100); ax.set_ylim(0, 100); ax.axis("off")
 ax.set_title("Cohort funnel (patients)", fontsize=11, fontweight="bold", color=NAVY)
@@ -157,16 +183,16 @@ for label, n, fc, ec in stages:
         ax.annotate("", xy=(50, y - 3.2), xytext=(50, y - 0.4),
                     arrowprops=dict(arrowstyle="-|>", color=GREY, lw=1.4))
     y -= 21
-ax.text(50, 1, "6,922 visit rows → 5,742 labelled (83.0%)",
+ax.text(50, 1, f"{N_ROWS:,} visit rows → {N_LAB:,} labelled ({PCT_LAB:.1f}%)",
         ha="center", fontsize=8.5, color=NAVY, fontweight="bold")
 
 # --- panel 2: label distribution ---
 ax = axes[1]
 labels = ["TD", "PIGD", "Indeter-\nminate"]
-vals = [52.6, 36.6, 10.8]
+vals = CLS_PCT
 cols = [BLUE, GREEN, AMBER]
 bars = ax.bar(labels, vals, color=cols, edgecolor="white", width=0.62)
-for b, v, n in zip(bars, vals, [3020, 2102, 620]):
+for b, v, n in zip(bars, vals, CLS_N):
     ax.text(b.get_x() + b.get_width() / 2, v + 1.4, f"{v}%\n(n={n})",
             ha="center", fontsize=8.6, fontweight="bold", color="#222222")
 ax.set_ylim(0, 66); ax.set_ylabel("% of labelled visits", fontsize=9)
@@ -177,7 +203,7 @@ ax.tick_params(labelsize=8.5)
 # --- panel 3: flip rates ---
 ax = axes[2]
 labels2 = ["TD", "PIGD", "Indeter-\nminate", "Overall"]
-vals2 = [20.9, 27.1, 76.3, 29.1]
+vals2 = FLIP_PCT
 cols2 = [BLUE, GREEN, AMBER, NAVY]
 bars = ax.barh(range(4), vals2, color=cols2, edgecolor="white", height=0.6)
 ax.set_yticks(range(4)); ax.set_yticklabels(labels2, fontsize=8.5)
@@ -185,7 +211,7 @@ ax.invert_yaxis()
 for i, v in enumerate(vals2):
     ax.text(v + 1.6, i, f"{v}%", va="center", fontsize=8.8, fontweight="bold", color="#222222")
 ax.set_xlim(0, 92); ax.set_xlabel("% flipping at next visit", fontsize=9)
-ax.set_title("Label instability\n(4,918 visit pairs)", fontsize=11, fontweight="bold", color=NAVY)
+ax.set_title(f"Label instability\n({N_PAIRS:,} visit pairs)", fontsize=11, fontweight="bold", color=NAVY)
 ax.spines[["top", "right"]].set_visible(False)
 ax.tick_params(labelsize=8.5)
 

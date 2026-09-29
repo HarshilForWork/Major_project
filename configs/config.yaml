@@ -39,5 +39,5 @@ validation:
 
 transition:
   target: LABEL_FLIPPED_NEXT
-  n_pairs: 4918
-  base_flip_rate: 0.291
+  n_pairs: 4818
+  base_flip_rate: 0.287

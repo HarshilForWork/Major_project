@@ -17,19 +17,19 @@ consequence, so the methods section of the paper can be written directly from it
 | Patients | **439** (PPMI PD cohort) |
 | Rows (patient-visits, scheduled visits only) | **6,922** |
 | Columns | 75 |
-| Rows with a computable TD/PIGD label | **5,742 (83.0%)** |
+| Rows with a computable TD/PIGD label | **5,638 (81.5%)** |
 | Duplicate `PATNO`+`EVENT_ID` keys | 0 (asserted in code) |
-| Label distribution (visit level) | TD 52.6%, PIGD 36.6%, Indeterminate 10.8% |
-| Visit-to-visit label flip rate | **29.1%** |
-| Patients who ever changed label | 355 / 439 (**80.9%**) |
+| Label distribution (visit level) | TD 53.5%, PIGD 35.5%, Indeterminate 11.0% |
+| Visit-to-visit label flip rate | **28.7%** |
+| Patients who ever changed label | 344 / 439 (**78.4%**) |
 
 ### Comparison with the superseded pipeline
 
 | | Old (`01_preprocess.py`, slow/mod/fast) | New (TD/PIGD) |
 |---|---|---|
 | Patients | 229 | **439** |
-| Labelled training units | 229 (one label per patient) | **5,742** (one label per visit) |
-| Patients usable at the 4th round | 143 | **275** |
+| Labelled training units | 229 (one label per patient) | **5,638** (one label per visit) |
+| Patients usable at the 4th round | 143 | **269** |
 | Label origin | K-Means clustering (invented) | Published formula (Stebbins 2013) |
 
 ---
@@ -70,18 +70,18 @@ MDS-UPDRS operationalisation of the Jankovic (1990) tremor/PIGD ratio.
 - `pigd_score == 0` and `tremor_score > 0` → **TD** (tremor present, no PIGD signs)
 - `pigd_score == 0` and `tremor_score == 0` → **INDETERMINATE** (0/0; asymptomatic on both constructs)
 
-This edge case affects **845 rows (14.7% of labelled rows)** — 709 classified TD,
+This edge case affects **845 rows (15.0% of labelled rows)** — 709 classified TD,
 136 Indeterminate. It is material enough that it must be stated in the paper, and
 a sensitivity analysis excluding these rows is advisable.
 
 **Completeness rule:** a label is computed only if **all 16 constituent items** are
 present. Rows missing any item receive `NaN` rather than a label derived from a
-partial mean. This is why 17% of rows are unlabelled.
+partial mean. This is why 18.5% of rows are unlabelled.
 
 **Verification performed:** the label was independently recomputed from
 `TREMOR_SCORE` / `PIGD_SCORE` and compared against the stored `LABEL` — 0
-mismatches across all 5,742 labelled rows. Ratio ranges per class confirm the
-cutoffs were applied correctly (PIGD max = 0.892; Indeterminate spans 0.909–1.136;
+mismatches across all 5,638 labelled rows. Ratio ranges per class confirm the
+cutoffs were applied correctly (PIGD max = 0.868; Indeterminate spans 0.909–1.136;
 TD min = 1.162).
 
 ---
@@ -138,6 +138,33 @@ tremor/PIGD ratio and flip a patient's computed category.
 assessment (untreated severity). `PDSTATE_USED` records which state was actually
 used for each retained row, so the sensitivity of results to this choice can be
 tested later.
+
+---
+
+## 5b. Numeric missing-data codes — bug found and fixed (30 Sep 2026)
+
+PPMI writes two "not a score" answers as **numbers**, not only as the text code `UR`:
+
+| Instrument | Code | Meaning | Cells in raw extract |
+|---|---|---|---|
+| MDS-UPDRS Part III items + `NHY` | **101** | unable to rate | 7,570 |
+| SCOPA-AUT items | **9** | not applicable | 24,513 |
+
+**Bug:** the pipeline replaced the string `UR` but not these numeric codes. A 101 was averaged
+into the tremor or PIGD score as a real severity. **104 labelled visits (77 patients) were
+mislabelled, 98 of them forced to PIGD** (mostly via postural stability, 3.12). Each SCOPA-AUT 9
+added 9 points to the crude autonomic sum.
+
+**Why verification missed it:** the "0 mismatches" check recomputed the label from the stored
+tremor / PIGD scores, which were computed from the same contaminated items. It confirmed the
+arithmetic, not the validity of the inputs.
+
+**Fix:** both codes → NaN before any score is computed. Under the completeness rule the
+affected visits become unlabelled (5,742 → 5,638). Two contract tests enforce it: label items
+≤ 4, and `SCOPA_AUT_TOTAL` ≤ 75. The run log records the cell counts.
+
+**Effect on results:** negligible for the models (TD vs PIGD balanced accuracy 0.696 → 0.694,
+logistic). The descriptive numbers all shift slightly, as in the table at the top.
 
 ---
 
@@ -270,22 +297,22 @@ scheduled visit; `LABEL_FLIPPED_NEXT` is 1 if it differs, 0 if it holds, `NaN` i
 either label is unknown. `MONTHS_TO_NEXT_VISIT` records the gap, which varies
 (3–12 months) and should be adjusted for.
 
-**Results (4,918 consecutive visit pairs with both labels known):**
+**Results (4,818 consecutive visit pairs with both labels known):**
 
 | Current label | Flip rate at next visit | n pairs |
 |---|---|---|
-| TD | 20.9% | 2,744 |
-| PIGD | 27.1% | 1,629 |
-| Indeterminate | **76.3%** | 545 |
-| **Overall** | **29.1%** | 4,918 |
+| TD | 20.2% | 2,722 |
+| PIGD | 27.0% | 1,555 |
+| Indeterminate | **76.2%** | 541 |
+| **Overall** | **28.7%** | 4,818 |
 
 Two observations worth reporting:
 
-1. The overall 29.1% per-visit flip rate is consistent with the published claim
+1. The overall 28.7% per-visit flip rate is consistent with the published claim
    (cited in the renewed-approach document) that roughly a third to a half of
    patients get reclassified within one to two years — an independent
    corroboration that the label was implemented correctly.
-2. Indeterminate is highly unstable (76.3%), which is expected — it is a narrow
+2. Indeterminate is highly unstable (76.2%), which is expected — it is a narrow
    boundary band (0.90 < ratio < 1.15) rather than a distinct clinical entity, so
    small measurement fluctuations push patients out of it. This has a real modelling
    consequence: a three-class flip model will behave very differently from a
@@ -306,14 +333,14 @@ deltas.
 | 1 | BL | **438** |
 | 2 | BL + 6mo | **349** |
 | 3 | BL + 6mo + 12mo | **323** |
-| 4 | BL + 6mo + 12mo + 24mo | **275** |
-| Alt. annual-only | BL + 12mo | 403 |
-| Alt. annual-only | BL + 12mo + 24mo | 343 |
+| 4 | BL + 6mo + 12mo + 24mo | **269** |
+| Alt. annual-only | BL + 12mo | 402 |
+| Alt. annual-only | BL + 12mo + 24mo | 337 |
 
 **Recommendation to consider:** the 6-month interim visit is the weak link
 (349 vs 438 patients) and the PPMI protocol explains why — it is a lighter interim
-visit. An annual-only 3-round design (BL → 12mo → 24mo) retains 343 patients at the
-final round versus 275, with more complete instrument coverage at each round.
+visit. An annual-only 3-round design (BL → 12mo → 24mo) retains 337 patients at the
+final round versus 269, with more complete instrument coverage at each round.
 
 **Mandatory downstream constraint:** with ~16 rows per patient, a row-wise random
 train/test split would place the same patient on both sides and leak. All splits
@@ -329,7 +356,7 @@ must be grouped by `PATNO` (`GroupKFold` or equivalent).
    totals. They are *not* the official reverse-coded scoring for these instruments
    and must not be reported as validated instrument totals — only as monotonic
    severity proxies.
-2. **The zero-PIGD edge case is non-trivial** (14.7% of labelled rows). The
+2. **The zero-PIGD edge case is non-trivial** (15.0% of labelled rows). The
    TD assignment for `pigd_score == 0, tremor_score > 0` is our explicit
    convention; a sensitivity analysis excluding these rows should accompany any
    headline result.
@@ -338,7 +365,7 @@ must be grouped by `PATNO` (`GroupKFold` or equivalent).
    document anticipated.
 4. **The genetic cohort is mutation-enriched by recruitment design**, so it is not
    representative of sporadic PD genetics.
-5. **17% of rows are unlabelled**, concentrated at later visits (months 54–90) —
+5. **18.5% of rows are unlabelled**, concentrated at later visits (months 54–90) —
    97.5% of unlabelled rows are missing the Part III gait item, reflecting visits
    where the motor exam was not administered plus study attrition.
 6. **PPMI is not representative of the target deployment setting.** Participants

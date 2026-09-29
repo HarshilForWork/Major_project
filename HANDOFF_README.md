@@ -1,5 +1,15 @@
 # TRACE-PD — Project Handover & Complete System Documentation
 
+> ⚠️ **Update 30 Sep 2026 (Harshil).** The numbers in this handover were produced **before** a
+> data fix: PPMI's numeric missing codes (Part III `101` = unable to rate, SCOPA-AUT `9` = not
+> applicable) had been treated as scores, mislabelling 104 visits. Labelled visits are now
+> **5,638** (was 5,742) and transition pairs **4,818** (was 4,918). The conformal, transition,
+> XGBoost and ablation results below must be **re-run**, and the review found issues in the
+> APS calibrator, the transition features and the orchestrator validator. See
+> [`docs/NEXT_STEPS_RUTU.md`](docs/NEXT_STEPS_RUTU.md). Current verified numbers are in
+> `README.md` §9.
+
+
 > **File:** `HANDOFF_README.md`  
 > **Status:** Full Solution Implemented & Validated (17/17 tests passing)  
 > **Cohort:** PPMI Parkinson's Disease Cohort (439 patients, 6,922 patient-visits)
