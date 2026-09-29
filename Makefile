@@ -1,4 +1,4 @@
-.PHONY: fcx c3 help setup preprocess baseline xgboost ablation sporadic figures docs test all clean
+.PHONY: fcx c3 split compare rounds c3plus help setup preprocess baseline xgboost ablation sporadic figures docs test all clean
 
 PY := python
 
@@ -12,6 +12,10 @@ help:
 	@echo "figures     regenerate every figure in reports/figures"
 	@echo "fcx         FCX explainability framework: evaluate all three components + figure"
 	@echo "docs        regenerate docs/data_dictionary.md from the processed data"
+	@echo "split       create the locked 20% patient test split"
+	@echo "compare     step 2: 12-config subtype classifier bake-off"
+	@echo "rounds      step 3: per-round models + FCX C1"
+	@echo "c3plus      step 4: E5/E6 transition models + FCX C3"
 	@echo "test        run the test suite"
 	@echo "all         preprocess -> baseline -> xgboost -> ablation -> figures"
 
@@ -46,6 +50,19 @@ fcx:
 
 c3:
 	$(PY) src/trace_pd/evaluation/validate_c3.py
+
+# --- session additions (need trace_pd importable: pip install -e . or PYTHONPATH=src)
+split:
+	$(PY) -m trace_pd.evaluation.splits
+
+compare:
+	$(PY) -m trace_pd.evaluation.compare_subtype_models
+
+rounds:
+	$(PY) -m trace_pd.evaluation.evaluate_c1_rounds
+
+c3plus:
+	$(PY) -m trace_pd.evaluation.improve_c3
 
 docs:
 	$(PY) src/trace_pd/data/export_dictionary.py
