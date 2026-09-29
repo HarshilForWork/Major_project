@@ -54,7 +54,8 @@ component weights b_P / b_D / b_N (mean over folds): +1.01 / +0.20 / +0.35
 WHAT DRIVES PREDICTED RISK (mean |phi| share, surrogate R^2 0.18):  proximity 75% | drift 2% | noise 22%
 ground-truth flip types (1059 flips with smoothed trajectory): noise flips 48% | drift flips 52%
 CORRECTNESS  AUROC for telling noise flips from drift flips:  FCX 0.516  vs  grouped Shapley on g3 0.508  (chance 0.5)
-OUTCOME    flips FCX calls noise/proximity-dominated revert at t+2: 36% (n=349) | drift-dominated: 36% (n=854)
+OUTCOME    not computable: the magnitude split puts 1193 flips on the noise/proximity side and 10 on the drift side.
+           With drift at 2% of attributed risk there is no drift-dominated group to compare, so no revert-rate contrast can be claimed.
 
 ------------------------------------------------------------------------------
 EXAMPLE EXPLANATIONS

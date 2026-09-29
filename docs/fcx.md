@@ -136,12 +136,25 @@ noise σ̂, with targets taken from the true trajectory over **adjacent schedule
 |---|---|
 | Trained proximity-only box (AUROC 0.77) | ✅ PASS — proximity 92%, weight +1.30 |
 | Trained drift-only / noise-only boxes | ⚪ INCONCLUSIVE — those boxes have no signal (AUROC ≈ 0.50) |
-| **Synthetic planted mechanisms** on the real feature distribution | ✅ **3/3 recovered** (e.g. planted drift → b_D 14.3, others 0.00) |
+| ~~Synthetic planted mechanisms on the real feature distribution~~ | ⛔ **WITHDRAWN 30 Sep — the test was tautological, see below** |
+
+> **Withdrawn claim (30 Sep 2026).** The synthetic planted test in `validate_c3.py` planted
+> the mechanism using the surrogate's **own** component: `g = sigmoid(-0.9 + 1.5·z(s_c))`.
+> That makes `logit(g)` exactly affine in `s_c`, and `calibrate_fidelity` then solves
+> `nnls(S, logit(g))` against the *same* `S` on the *same* rows — an exactly-solvable system
+> whose closed form is `w = e_c · 1.5/std(s_c)`. Checked numerically: the recovered weight
+> equals `1.5/std(s_c)` to 8 decimal places, and the reported `b_D 14.3` is just
+> `1.5/std(s_D)`. The test passes for any data, any model and any patient, so the "3/3" was
+> never evidence. A **falsifiable** replacement — planting in the *true* trajectory
+> quantities (`distance(eta)`, `|mu|`, `noise_abs`), which the heads only approximate — is in
+> `evaluation/improve_c3.py` and also recovers 3/3, but with non-degenerate weights
+> (planted noise: b_N 0.46 vs b_D 0.41, a narrow win) and head correlations of
+> 0.81 / 0.32 / 0.45. That version is the one worth citing.
 
 **Honest reading:**
 
-- **Faithful.** C3 reproduces a transition model that has signal (R² 0.62), and it recovers
-  planted mechanisms correctly.
+- **Faithful.** C3 reproduces a transition model that has signal (R² 0.62). Planted-mechanism
+  recovery now rests on the falsifiable test only (3/3, but drift and noise are close).
 - **The explanation it gives is consistent:** transition risk is **~85% proximity to a
   cutoff**, drift ≈ 3–6%. It predicts *instability near a threshold*, not progression.
 - **Where it fails:** C3 does **not** beat grouped Shapley at identifying which observed flips
@@ -228,7 +241,7 @@ box. They are:
 | C3 E2 exam-informed — AUROC / R² / proximity share | 0.77 / 0.62 / 83% | **0.77 / 0.61 / 80%** |
 | C3 E3 sustained — AUROC / R² | 0.79 / 0.56 | **0.80 / 0.52** |
 | C3 noise-vs-drift, E3 — C3 / grouped Shapley | 0.64 / 0.66 | 0.62 / 0.67 |
-| C3 planted — trained proximity-only / synthetic 3 mechanisms | PASS / 3/3 | **PASS / 3/3** |
+| C3 planted — trained proximity-only / synthetic 3 mechanisms | PASS / 3/3 | **PASS / 3/3 — but the synthetic half is withdrawn as tautological (§ above); the falsifiable replacement also gives 3/3** |
 
 **Every conclusion holds on both black boxes**, including the negative ones.
 

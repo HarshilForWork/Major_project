@@ -145,10 +145,19 @@ for k, (col, c) in COMP.items():
     log(f"  {k:15s} {verdict}")
 
 # ---- synthetic planted mechanisms on the REAL feature distribution -----------------
-# The trained drift-/noise-only boxes carry no signal, so they can't test anything.
-# Here the mechanism is planted: black box = sigmoid(a + 1.5 * z(s_c)) with s_c the surrogate's
-# own component c computed on real patients. C3 must recover the planted component.
-log("\nPLANTED TEST (synthetic, real feature distribution) -- recovered component weights:")
+# WARNING -- THIS TEST IS TAUTOLOGICAL AND IS NOT EVIDENCE.
+# The mechanism is planted using the surrogate's OWN component s_c:
+#     g = sigmoid(-0.9 + 1.5 * z(s_c))   =>   logit(g) is EXACTLY affine in s_c.
+# calibrate_fidelity then solves nnls(S, logit(g)) against that same S on those same
+# rows, which has the exact zero-residual solution w = e_c * 1.5 / std(s_c). Checked
+# numerically: the recovered weight equals 1.5/std(s_c) to 8 decimal places. The test
+# therefore passes for any data, any model and any patient, and its "3/3" says nothing
+# about whether C3 can recover a real mechanism.
+# A falsifiable version -- planting in the TRUE trajectory quantities, which the heads
+# only approximate -- is in evaluation/improve_c3.py. Kept here unchanged so the older
+# reports remain reproducible.
+log("\nPLANTED TEST (synthetic) -- TAUTOLOGICAL, NOT EVIDENCE (see source comment);")
+log("recovered weights are the closed form 1.5/std(s_c) by construction:")
 XH, Gs = r2["XH"], r2["G"]
 pd_ = PDNExplainer().fit(XH, r2["t"].eta.to_numpy(), r2["t"].mu.to_numpy(), r2["t"].noise_abs.to_numpy(),
                          noise_factor=r2["t"].NOISE_FACTOR.to_numpy(),

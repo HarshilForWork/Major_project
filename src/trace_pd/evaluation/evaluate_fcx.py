@@ -302,9 +302,21 @@ au_b = roc_auc_score(fl.noise_flip, fl.b_noise + fl.b_level - fl.b_drift)
 log(f"CORRECTNESS  AUROC for telling noise flips from drift flips:  FCX {au_f:.3f}  vs  grouped Shapley on g3 {au_b:.3f}  (chance 0.5)")
 t3["reverted"] = t3.REVERTED                              # scheduled t+2, from trajectory.build
 f2 = t3[(t3.LABEL_FLIPPED_NEXT == 1) & t3.reverted.notna()]
-nd = (f2.phi_N + f2.phi_P) > f2.phi_D
-log(f"OUTCOME    flips FCX calls noise/proximity-dominated revert at t+2: {f2[nd].reverted.mean()*100:.0f}% (n={nd.sum()}) "
-    f"| drift-dominated: {f2[~nd].reverted.mean()*100:.0f}% (n={(~nd).sum()})")
+# Dominance must be judged on MAGNITUDE, the same way the shares three lines above are.
+# The old signed rule (phi_N + phi_P > phi_D) labelled a row "drift-dominated" whenever
+# proximity sat BELOW the cohort reference (phi_P < 0), which is most rows -- phi_P
+# reaches -2.22 while phi_D is pinned near zero (std 0.012). It reported 863 of 1203
+# flips as drift-dominated in a model where drift explains 3% of the risk.
+nd = (f2.phi_N.abs() + f2.phi_P.abs()) > f2.phi_D.abs()
+n_nd, n_d = int(nd.sum()), int((~nd).sum())
+if n_d < 30 or n_nd < 30:
+    log(f"OUTCOME    not computable: the magnitude split puts {n_nd} flips on the "
+        f"noise/proximity side and {n_d} on the drift side.")
+    log(f"           With drift at {aD_/tot*100:.0f}% of attributed risk there is no drift-dominated "
+        f"group to compare, so no revert-rate contrast can be claimed.")
+else:
+    log(f"OUTCOME    flips FCX calls noise/proximity-dominated revert at t+2: {f2[nd].reverted.mean()*100:.0f}% (n={n_nd}) "
+        f"| drift-dominated: {f2[~nd].reverted.mean()*100:.0f}% (n={n_d})")
 
 # =========================================================================== examples
 OUT = MET / f"fcx_results{SFX}.txt"

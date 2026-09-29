@@ -34,6 +34,16 @@ def build(df):
     d["PRIOR_VISITS"] = g.cumcount()
     d["DIST_CUT"] = FM.distance_to_cutoff(d.ell)
     d["STATE_ON"] = (d.PDSTATE_USED == "ON").astype(float).where(d.PDSTATE_USED.notna())
+    # --- history of the PREVIOUS scheduled visit (used by E5/E6) ------------------
+    # Shifted here, before unlabelled rows are dropped, so "previous" is the adjacent
+    # scheduled visit and is NaN when that visit carries no label.
+    d["ell_prev"] = lp
+    d["D_ell"] = d.ell - lp
+    d["DIST_CUT_prev"] = FM.distance_to_cutoff(lp)
+    # fresh groupby: STATE_ON was added after `g` was built
+    d["STATE_ON_prev"] = d.groupby("PATNO").STATE_ON.shift(1)
+    d["MONTHS_SINCE_PREV"] = d.VISIT_MONTH - mp
+
     d["L2"] = g.LABEL.shift(-2)                               # scheduled visit t+2
     d["SUSTAINED"] = np.where(d.LABEL_FLIPPED_NEXT.isna() | d.L2.isna(), np.nan,
                               ((d.LABEL_FLIPPED_NEXT == 1) & (d.L2 == d.NEXT_LABEL)).astype(float))
