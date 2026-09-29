@@ -770,6 +770,22 @@ argues with a completed exam.
 > flow above is the design. It's realistic from Visit 2 onward once the remaining layers are
 > built.
 
+### 10.3 Explainability — FCX (our own framework)
+
+**Formula-Coordinate Explanations** explain all three models *in the Stebbins formula's own
+coordinates*: the tremor/gait log-ratio, its two cutoffs, and a tremor channel vs a gait
+channel. Every explanation is scored against the true exam scores. It's our own
+implementation, including the Shapley estimator; SHAP-style attribution appears only as a
+baseline. Full method and results: [`docs/fcx.md`](docs/fcx.md). Run with `make fcx`.
+
+![FCX](reports/figures/fig_fcx_summary.png)
+
+| Component | Explains | Result |
+|---|---|---|
+| **C1 Implied exam** | subtype classifier | fidelity **89.6%**. The model's implied gait matches the truth (r 0.57); its **tremor doesn't (r 0.25): it's nearly blind to tremor**. LEDD drives the tremor channel, i.e. the model learned that medication suppresses tremor. |
+| **C2 Cutoff straddle** | conformal sets | reproduces set ambiguity (κ **0.61**). "Which part of the exam would settle it" is **verified right 81%** of the time, vs 68% for a SHAP-style baseline and 73% random |
+| **C3 Proximity–drift–noise** | transition risk | only **8%** of predicted risk is real drift. Built leak-free, the transition model is near chance (AUROC 0.53) |
+
 ### 10.2 Design documents
 
 | Layer | Document |
@@ -822,6 +838,8 @@ trace-pd/
 │   ├── models/train_xgboost.py    Exp 1–3 with XGBoost
 │   ├── evaluation/ablation.py     Exp 5
 │   ├── evaluation/sporadic_baseline.py  Exp 6
+│   ├── evaluation/evaluate_fcx.py   FCX evaluation
+│   ├── explain/                   FCX: formula, shapley, implied_exam, straddle, pdn
 │   └── viz/                       every figure, reproducible
 ├── tests/test_dataset_contract.py 8 invariants, incl. the leakage guarantee
 ├── Makefile · pyproject.toml · requirements.txt
@@ -869,7 +887,7 @@ SCOPA-AUT**.
 | Longitudinal tracker | 🟡 built; first-visit deltas are 0.0 at serving vs NaN in training | Rutu |
 | Explanation orchestrator | 🟡 built as a template; **validator is a no-op**, raw-scale delta sorting | Rutu |
 | Inference pipeline + demo | ✅ built; `--patient-id` not wired | Rutu |
-| Explainability novelty | 🔬 research stage — `docs/novelty_feasibility_results.md` | Harshil |
+| **Explainability — FCX** | ✅ built, evaluated, test-guarded (`docs/fcx.md`, `make fcx`) | Harshil |
 
 **Next steps, in priority order:**
 
@@ -881,8 +899,8 @@ SCOPA-AUT**.
 4. **Fix the orchestrator:** make the validator actually reject, rank deltas on a common scale,
    and give each feature the right "worse" direction.
 5. **Decide on the medication-state issue (§9.7):** label OFF-state exams only, or stratify.
-6. **Pick the explainability contribution** — "flip anatomy" is the current lead. Run its
-   novelty search first.
+6. **Explainability:** FCX is built (§10.3). Next: re-run it on Rutu's XGBoost, and rebuild C3
+   on a transition target with real signal (sustained transitions).
 7. Sensitivity analysis excluding the 845 zero-PIGD edge-case rows.
 8. Update the paper draft and slides with the corrected numbers.
 

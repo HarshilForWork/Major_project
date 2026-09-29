@@ -2,6 +2,8 @@
 
 *Draft, 30 Sep 2026. Name is a placeholder.*
 
+> **Status 30 Sep:** built and evaluated the same day — see [`fcx.md`](fcx.md).
+
 **Goal (from our guide):** our own explainability method that explains **our models'
 predictions** — the subtype classifier, the conformal sets and the transition-risk model. Not
 off-the-shelf SHAP, and not explanations of the data.
