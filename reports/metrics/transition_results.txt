@@ -6,39 +6,41 @@ Validation: 5-Fold StratifiedGroupKFold by PATNO
 ==========================================================================
 
 --- TARGET: NEXT_VISIT (LABEL_FLIPPED_NEXT) ---
-Evaluated Instances: 4918 across 438 patients
-Base Flip Rate:      29.1% (1430 positive flips)
-ROC-AUC:             0.6469
-PR-AUC:              0.4208
-Balanced Accuracy:   0.5897
-F1 Score:            0.4464
-Brier Score:         0.2271 (well-calibrated probabilities)
+Evaluated Instances: 4818 across 438 patients
+Base Flip Rate:      28.7% (1383 positive flips)
+ROC-AUC:             0.5350
+PR-AUC:              0.2941
+Balanced Accuracy:   0.5184
+F1 Score:            0.3636
+Brier (unweighted):  0.2084  vs base-rate 0.2047 (NO BETTER than always predicting the base rate)
+Brier (bal. weights):0.2426  <- not a calibration measure, weights distort the scale
 
 Top 8 Predictive Signals:
-  PROB_INDETERMINATE       : 0.0863
-  PROB_TD                  : 0.0482
-  PROB_MARGIN_TOP2         : 0.0452
-  PROB_PIGD                : 0.0373
-  CONFORMAL_SET_SIZE       : 0.0366
-  N_CONMEDS                : 0.0286
-  NP1PTOT                  : 0.0256
-  NP2SPCH                  : 0.0248
+  PDTRTMNT                 : 0.0418
+  HANDED                   : 0.0388
+  NP2HYGN                  : 0.0350
+  NP2DRES                  : 0.0339
+  PROB_PIGD                : 0.0330
+  NP2SPCH                  : 0.0316
+  NP2EAT                   : 0.0308
+  SEX                      : 0.0303
 
 --- TARGET: 12_MONTH_HORIZON (FLIP_WITHIN_12M) ---
-Evaluated Instances: 5105 across 438 patients
-Base Flip Rate:      42.5% (2168 positive flips)
-ROC-AUC:             0.6556
-PR-AUC:              0.5836
-Balanced Accuracy:   0.6030
-F1 Score:            0.5596
-Brier Score:         0.2303 (well-calibrated probabilities)
+Evaluated Instances: 5006 across 438 patients
+Base Flip Rate:      41.8% (2094 positive flips)
+ROC-AUC:             0.5630
+PR-AUC:              0.4570
+Balanced Accuracy:   0.5467
+F1 Score:            0.4901
+Brier (unweighted):  0.2449  vs base-rate 0.2433 (NO BETTER than always predicting the base rate)
+Brier (bal. weights):0.2487  <- not a calibration measure, weights distort the scale
 
 Top 8 Predictive Signals:
-  PROB_INDETERMINATE       : 0.0870
-  PROB_MARGIN_TOP2         : 0.0601
+  HANDED                   : 0.0416
+  NP2DRES                  : 0.0411
+  YRS_SINCE_DIAGNOSIS      : 0.0405
   PROB_PIGD                : 0.0358
-  PROB_TD                  : 0.0346
-  HANDED                   : 0.0338
-  PRIOR_VISITS_COUNT       : 0.0276
-  NP2HYGN                  : 0.0273
-  YRS_SINCE_DIAGNOSIS      : 0.0270
+  NP2RISE                  : 0.0347
+  YRS_SINCE_SYMPTOM_ONSET  : 0.0311
+  NP2SPCH                  : 0.0300
+  SEX                      : 0.0292

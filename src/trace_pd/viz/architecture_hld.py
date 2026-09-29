@@ -116,7 +116,7 @@ box(LXT, yT[3], "Label Engine\nStebbins ratio", LRED, RED, w=14.6, h=7.0, fs=7.6
 box(RXT, yT[3], "Leakage Guard\npolicy gate", LAMBER, AMBER, w=14.6, h=7.0, fs=7.6)
 box(CX_T, yT[4], "Training Matrix\none row per patient-visit  ·  permitted X + subtype Y",
     "#ffffff", BLUE, h=7.6, fs=7.4)
-box(LXT, yT[5], "Visit-Pair Builder\npairs t → t+1\nflip target · 4,918", LRED, RED,
+box(LXT, yT[5], "Visit-Pair Builder\npairs t → t+1\nflip target · 4,818", LRED, RED,
     w=14.6, h=9.2, fs=7.2)
 box(RXT, yT[5], "Subtype Trainer\n+ Calibrator", "#ffffff", BLUE, w=14.6, h=9.2, fs=7.8)
 box(LXT, yT[6], "Transition Trainer\n+ Calibrator", "#ffffff", BLUE, w=14.6, h=8.4, fs=7.8)

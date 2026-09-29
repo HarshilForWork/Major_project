@@ -25,6 +25,65 @@ from xgboost import XGBClassifier
 
 from trace_pd import config
 from trace_pd.models.conformal import ConformalPredictor
+from trace_pd.evaluation.splits import assign_patient_folds, log_run
+
+
+SUBTYPE_PARAMS = dict(
+    max_depth=3, n_estimators=300, learning_rate=0.05,
+    subsample=0.8, colsample_bytree=0.8, min_child_weight=5,
+    random_state=42, n_jobs=-1, tree_method="hist",
+    objective="multi:softprob", num_class=3, eval_metric="mlogloss",
+)
+CLASSES_3C = ["TD", "PIGD", "INDETERMINATE"]
+
+
+def _oof_upstream_outputs(df, X_cheap):
+    """Out-of-fold subtype probabilities and conformal set sizes for every row.
+
+    For each patient fold k: fit the subtype model on the labelled visits of the OTHER
+    folds, hold out a quarter of those training patients to calibrate LAC, then score
+    fold k. Rows of patients in fold k are therefore scored by a model and a calibrator
+    that never saw them -- the same situation as a new patient at serving time.
+
+    Unlabelled rows still need a score (they can be the t-1 visit of a labelled pair),
+    so they are scored by the model of the fold their patient belongs to.
+    """
+    fold_of = assign_patient_folds(df)
+    folds = np.array([fold_of.get(p, 0) for p in df["PATNO"].to_numpy()])
+
+    labelled = df["LABEL"].isin(CLASSES_3C).to_numpy()
+    y_int = np.full(len(df), -1)
+    c2i = {c: i for i, c in enumerate(CLASSES_3C)}
+    y_int[labelled] = [c2i[c] for c in df.loc[labelled, "LABEL"]]
+
+    probs = np.full((len(df), 3), np.nan)
+    set_sizes = np.full(len(df), np.nan)
+
+    for k in sorted(set(folds.tolist())):
+        te_rows = np.flatnonzero(folds == k)
+        tr_rows = np.flatnonzero((folds != k) & labelled)
+        if len(te_rows) == 0 or len(tr_rows) == 0:
+            continue
+
+        # carve a calibration slice out of the TRAINING patients only
+        tr_groups = df["PATNO"].to_numpy()[tr_rows]
+        inner = StratifiedGroupKFold(n_splits=4, shuffle=True, random_state=42)
+        fit_rel, cal_rel = next(inner.split(X_cheap.iloc[tr_rows], y_int[tr_rows], groups=tr_groups))
+        fit_rows, cal_rows = tr_rows[fit_rel], tr_rows[cal_rel]
+
+        m = XGBClassifier(**SUBTYPE_PARAMS)
+        m.fit(X_cheap.iloc[fit_rows], y_int[fit_rows],
+              sample_weight=compute_sample_weight("balanced", y_int[fit_rows]))
+
+        cal_probs = m.predict_proba(X_cheap.iloc[cal_rows])
+        cp = ConformalPredictor(method="lac", alpha=0.10, classes=CLASSES_3C)
+        cp.calibrate(cal_probs, np.array(CLASSES_3C)[y_int[cal_rows]])
+
+        te_probs = m.predict_proba(X_cheap.iloc[te_rows])
+        probs[te_rows] = te_probs
+        set_sizes[te_rows] = [len(s) for s in cp.predict_sets(te_probs)]
+
+    return probs, set_sizes
 
 
 def build_transition_dataset():
@@ -33,16 +92,10 @@ def build_transition_dataset():
     dd = pd.read_csv(config.DICTIONARY)
     cheap_features = sorted(dd.loc[dd.bucket == "CHEAP_FEATURE", "column"].tolist())
     
-    # Load production conformal/subtype model for upstream feature generation
-    conformal_path = config.MODELS / "conformal_model_production.pkl"
-    if not conformal_path.exists():
-        raise FileNotFoundError("Production conformal model not found. Run conformal.py first.")
-    
-    with open(conformal_path, "rb") as f:
-        artifacts = pickle.load(f)
-    prod_model = artifacts["model_3c"]
-    prod_conformal = ConformalPredictor.from_dict(artifacts["conformal_3c_lac"])
-    
+    # Upstream features are now generated out-of-fold inside this script, so the
+    # production conformal pickle is no longer an input (it used to be, and using it
+    # was the leak).
+    #
     # Sort by patient and visit
     df = df.sort_values(["PATNO", "VISIT_MONTH"]).reset_index(drop=True)
     
@@ -90,21 +143,26 @@ def build_transition_dataset():
     # Prior visits count
     df["PRIOR_VISITS_COUNT"] = df.groupby("PATNO").cumcount()
     
-    # 3. Upstream Subtype Model Outputs (Probabilities & Margins)
+    # 3. Upstream subtype-model outputs -- OUT OF FOLD.
+    #
+    #    Previously these came from the production model, which was fitted on 80% of
+    #    patients and then scored ALL of them: for those patients PROB_* encoded their
+    #    own true label. They are the top transition features, so the reported AUC was
+    #    optimistic. Now each patient is scored by a model that never saw that patient,
+    #    using the SAME patient folds the transition CV will use.
     X_cheap = df[cheap_features].apply(pd.to_numeric, errors="coerce")
-    probs = prod_model.predict_proba(X_cheap)
-    pred_sets = prod_conformal.predict_sets(probs)
-    
+    probs, set_sizes = _oof_upstream_outputs(df, X_cheap)
+
     # Classes: ['TD', 'PIGD', 'INDETERMINATE']
     df["PROB_TD"] = probs[:, 0]
     df["PROB_PIGD"] = probs[:, 1]
     df["PROB_INDETERMINATE"] = probs[:, 2]
-    
+
     # Top-2 probability margin
     sorted_probs = np.sort(probs, axis=1)
     df["PROB_MARGIN_TOP2"] = sorted_probs[:, -1] - sorted_probs[:, -2]
-    df["CONFORMAL_SET_SIZE"] = [len(s) for s in pred_sets]
-    
+    df["CONFORMAL_SET_SIZE"] = set_sizes
+
     # Assemble feature set for transition model
     transition_features = (
         cheap_features +
@@ -119,7 +177,8 @@ def build_transition_dataset():
 def train_and_evaluate_transition_model():
     """Train XGBoost transition models on next-visit and 12-month flip targets."""
     df, features = build_transition_dataset()
-    
+    fold_of = assign_patient_folds(df)
+
     targets = [
         ("NEXT_VISIT (LABEL_FLIPPED_NEXT)", "LABEL_FLIPPED_NEXT"),
         ("12_MONTH_HORIZON (FLIP_WITHIN_12M)", "FLIP_WITHIN_12M")
@@ -145,29 +204,46 @@ def train_and_evaluate_transition_model():
         n_pairs = len(y)
         flip_rate = float(np.mean(y))
         
-        sgk = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+        # SAME patient folds that generated the out-of-fold upstream features.
+        sub_folds = np.array([fold_of.get(p, 0) for p in groups])
+
+        tx_params = dict(
+            max_depth=3, n_estimators=250, learning_rate=0.04,
+            subsample=0.8, colsample_bytree=0.8, min_child_weight=4,
+            random_state=42, n_jobs=-1, tree_method="hist",
+            objective="binary:logistic", eval_metric="logloss",
+        )
+
         oof_preds = np.zeros(n_pairs)
-        oof_probs = np.zeros(n_pairs)
-        
-        for tr_idx, te_idx in sgk.split(X, y, groups=groups):
-            m = XGBClassifier(
-                max_depth=3, n_estimators=250, learning_rate=0.04,
-                subsample=0.8, colsample_bytree=0.8, min_child_weight=4,
-                random_state=42, n_jobs=-1, tree_method="hist",
-                objective="binary:logistic", eval_metric="logloss"
-            )
-            weights = compute_sample_weight("balanced", y[tr_idx])
-            m.fit(X.iloc[tr_idx], y[tr_idx], sample_weight=weights)
-            
+        oof_probs = np.zeros(n_pairs)      # balanced-weight model -> for ranking metrics
+        oof_probs_unw = np.zeros(n_pairs)  # unweighted model      -> for Brier
+
+        for k in sorted(set(sub_folds.tolist())):
+            te_idx = np.flatnonzero(sub_folds == k)
+            tr_idx = np.flatnonzero(sub_folds != k)
+            if len(te_idx) == 0 or len(np.unique(y[tr_idx])) < 2:
+                continue
+
+            m = XGBClassifier(**tx_params)
+            m.fit(X.iloc[tr_idx], y[tr_idx],
+                  sample_weight=compute_sample_weight("balanced", y[tr_idx]))
             oof_probs[te_idx] = m.predict_proba(X.iloc[te_idx])[:, 1]
             oof_preds[te_idx] = m.predict(X.iloc[te_idx])
-            
+
+            # Balanced weights deliberately distort the probability scale toward 0.5,
+            # so a Brier score computed from them is not a calibration measurement.
+            m_unw = XGBClassifier(**tx_params)
+            m_unw.fit(X.iloc[tr_idx], y[tr_idx])
+            oof_probs_unw[te_idx] = m_unw.predict_proba(X.iloc[te_idx])[:, 1]
+
         roc_auc = roc_auc_score(y, oof_probs)
         pr_auc = average_precision_score(y, oof_probs)
         bal_acc = balanced_accuracy_score(y, oof_preds)
         f1 = f1_score(y, oof_preds)
-        brier = brier_score_loss(y, oof_probs)
-        
+        brier = brier_score_loss(y, oof_probs_unw)
+        brier_weighted = brier_score_loss(y, oof_probs)
+        brier_base = brier_score_loss(y, np.full(n_pairs, flip_rate))
+
         report_lines += [
             f"\n--- TARGET: {title} ---",
             f"Evaluated Instances: {n_pairs} across {sub['PATNO'].nunique()} patients",
@@ -176,8 +252,15 @@ def train_and_evaluate_transition_model():
             f"PR-AUC:              {pr_auc:.4f}",
             f"Balanced Accuracy:   {bal_acc:.4f}",
             f"F1 Score:            {f1:.4f}",
-            f"Brier Score:         {brier:.4f} (well-calibrated probabilities)",
+            f"Brier (unweighted):  {brier:.4f}  vs base-rate {brier_base:.4f} "
+            f"({'better' if brier < brier_base else 'NO BETTER'} than always predicting the base rate)",
+            f"Brier (bal. weights):{brier_weighted:.4f}  <- not a calibration measure, weights distort the scale",
         ]
+        for mname, mval in [("roc_auc", roc_auc), ("pr_auc", pr_auc), ("bal_acc", bal_acc),
+                            ("brier_unweighted", brier), ("brier_base_rate", brier_base)]:
+            log_run("1", f"transition:{target_col}", "xgboost", tx_params, "dev+test CV (oof upstream)",
+                    mname, mval, n=n_pairs, n_patients=sub["PATNO"].nunique(),
+                    note="upstream PROB_*/set size now out-of-fold")
         
         # Fit final production model on full data
         final_model = XGBClassifier(

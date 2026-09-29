@@ -30,3 +30,6 @@ Thumbs.db
 # ---------------------------------------------------------------- office temp
 ~$*
 .~lock.*
+
+# locked evaluation split -- deterministic, must be reproducible
+!data/interim/locked_test_patients.csv

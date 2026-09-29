@@ -54,31 +54,46 @@ class ConformalPredictor:
         inst.q_hat = d["q_hat"]
         return inst
 
+    def _scores_all_classes(self, probs: np.ndarray, u: np.ndarray = None) -> np.ndarray:
+        """Nonconformity score for EVERY class, returned in the original class order.
+
+        This is the single score function used at BOTH calibration and prediction --
+        the two must agree or the coverage guarantee is void. (They did not agree
+        before: calibration used the randomised APS score while prediction used the
+        non-randomised "accumulate until cum_p >= q_hat" rule, which is a strictly
+        larger set, hence ~99% coverage against a 90% target.)
+
+          LAC : s_k = 1 - p_k
+          APS : s_k = (cumulative prob of classes strictly above k) + u * p_k
+                with u ~ U(0,1) drawn per row (Romano et al. 2020).
+        """
+        probs = np.asarray(probs, dtype=float)
+        if self.method == "lac":
+            return 1.0 - probs
+
+        n = probs.shape[0]
+        if u is None:
+            u = np.zeros(n)
+        order = np.argsort(-probs, axis=1)                      # descending probability
+        sp = np.take_along_axis(probs, order, axis=1)
+        # cumulative sum EXCLUDING the class itself, plus a randomised share of it
+        s_sorted = np.cumsum(sp, axis=1) - sp + np.asarray(u)[:, None] * sp
+        scores = np.empty_like(probs)
+        np.put_along_axis(scores, order, s_sorted, axis=1)       # back to class order
+        return scores
+
     def compute_nonconformity_scores(self, probs: np.ndarray, y_true: np.ndarray) -> np.ndarray:
-        """Compute nonconformity scores for true labels given probability matrix."""
-        n_samples = len(y_true)
-        scores = np.zeros(n_samples)
-        
+        """Score of the TRUE label for each calibration row."""
         class_to_idx = {c: i for i, c in enumerate(self.classes)}
         y_indices = np.array([class_to_idx[y] for y in y_true])
 
         if self.method == "lac":
-            # LAC score: 1 - P(y_true)
-            for i in range(n_samples):
-                scores[i] = 1.0 - probs[i, y_indices[i]]
+            u = None
         else:
-            # Randomized APS score (Romano et al. 2020)
-            rng = np.random.RandomState(self.random_state)
-            u = rng.uniform(0.0, 1.0, n_samples)
-            for i in range(n_samples):
-                p = probs[i]
-                y_idx = y_indices[i]
-                sort_order = np.argsort(-p)
-                rank = np.where(sort_order == y_idx)[0][0]
-                p_cum = np.sum(p[sort_order[:rank]])
-                scores[i] = p_cum + u[i] * p[sort_order[rank]]
+            u = np.random.RandomState(self.random_state).uniform(0.0, 1.0, len(y_indices))
 
-        return scores
+        all_scores = self._scores_all_classes(probs, u=u)
+        return all_scores[np.arange(len(y_indices)), y_indices]
 
     def calibrate(self, probs_cal: np.ndarray, y_cal: np.ndarray) -> float:
         """Compute conformal quantile q_hat on the calibration split."""
@@ -96,31 +111,25 @@ class ConformalPredictor:
         if self.q_hat is None:
             raise ValueError("Conformal predictor is not calibrated yet. Call calibrate() first.")
         
+        probs = np.asarray(probs, dtype=float)
         n_samples = len(probs)
-        prediction_sets = []
 
+        # Same score function as calibration; a class is in the set iff its score <= q_hat.
         if self.method == "lac":
-            p_cutoff = 1.0 - self.q_hat
-            for p in probs:
-                matches = [self.classes[i] for i, prob in enumerate(p) if prob >= p_cutoff]
-                if not matches:
-                    matches = [self.classes[np.argmax(p)]]
-                prediction_sets.append(matches)
+            u = None
         else:
-            # APS accumulation
-            for p in probs:
-                sort_order = np.argsort(-p)
-                sorted_p = p[sort_order]
-                sorted_classes = self.classes[sort_order]
-                
-                current_set = []
-                cum_p = 0.0
-                for cls, prob in zip(sorted_classes, sorted_p):
-                    current_set.append(cls)
-                    cum_p += prob
-                    if cum_p >= self.q_hat:
-                        break
-                prediction_sets.append(current_set)
+            # Fresh randomisation at prediction time, as the APS construction requires.
+            u = np.random.RandomState(self.random_state + 1).uniform(0.0, 1.0, n_samples)
+
+        scores = self._scores_all_classes(probs, u=u)
+        keep = scores <= self.q_hat
+
+        prediction_sets = []
+        for i in range(n_samples):
+            members = [self.classes[k] for k in range(probs.shape[1]) if keep[i, k]]
+            if not members:                       # never return an empty set
+                members = [self.classes[int(np.argmax(probs[i]))]]
+            prediction_sets.append(members)
 
         return prediction_sets
 
@@ -241,7 +250,7 @@ def run_conformal_pipeline():
         "Target Marginal Coverage: 90.0% (alpha = 0.10) across unseen patients",
         "Evaluation: 5-Fold StratifiedGroupKFold by PATNO",
         "",
-        "--- TASK 1: BINARY (TD vs PIGD) - 5,122 rows, 439 patients ---",
+        f"--- TASK 1: BINARY (TD vs PIGD) - {len(sub_bin):,} rows, {sub_bin.PATNO.nunique()} patients ---",
         f"LAC Method:",
         f"  Empirical OOF Coverage: {results_bin['lac']['empirical_coverage']*100:.2f}%",
         f"  Mean Set Size:          {results_bin['lac']['mean_set_size']:.2f} classes",
@@ -256,7 +265,7 @@ def run_conformal_pipeline():
         f"  Dual-Label Sets (Size 2):{results_bin['aps']['size_2_pct']:.1f}%",
         f"  Calibrated Threshold:   q_hat = {results_bin['aps']['mean_q_hat']:.4f}",
         "",
-        "--- TASK 2: 3-CLASS (TD vs PIGD vs INDETERMINATE) - 5,742 rows ---",
+        f"--- TASK 2: 3-CLASS (TD vs PIGD vs INDETERMINATE) - {len(sub_3c):,} rows, {sub_3c.PATNO.nunique()} patients ---",
         f"LAC Method:",
         f"  Empirical OOF Coverage: {results_3c['lac']['empirical_coverage']*100:.2f}%",
         f"  Mean Set Size:          {results_3c['lac']['mean_set_size']:.2f} classes",
