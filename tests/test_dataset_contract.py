@@ -49,11 +49,11 @@ def test_label_values(df):
 
 
 def test_labelled_row_count(df):
-    assert df["LABEL"].notna().sum() == 5742
+    assert df["LABEL"].notna().sum() == 5638
 
 
 def test_transition_pair_count(df):
-    assert df["LABEL_FLIPPED_NEXT"].notna().sum() == 4918
+    assert df["LABEL_FLIPPED_NEXT"].notna().sum() == 4818
 
 
 def test_no_label_defining_item_is_a_feature(dictionary):
@@ -76,3 +76,14 @@ def test_label_is_reproducible_from_component_scores(df):
     recomputed[sub["TD_PIGD_RATIO"] >= 1.15] = "TD"
     recomputed[sub["TD_PIGD_RATIO"] <= 0.90] = "PIGD"
     assert (recomputed == sub["LABEL"]).all()
+
+
+def test_no_missing_data_codes_in_label_items(df):
+    """PPMI codes 'unable to rate' as 101. It must never reach the label formula."""
+    items = [c for c in LABEL_DEFINING if c in df.columns]
+    assert df[items].max().max() <= 4
+
+
+def test_scopa_has_no_not_applicable_codes(df):
+    """SCOPA-AUT: 25 items scored 0-3, so the crude sum can't exceed 75."""
+    assert df["SCOPA_AUT_TOTAL"].max() <= 75

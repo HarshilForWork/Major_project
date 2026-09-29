@@ -46,7 +46,7 @@ column ever lands in a feature bucket.
 | `N_CONMEDS` | Count of active concomitant medications | Concomitant Med Log (date interval) | numeric | 91.8 | 45 |
 | `PDTRTMNT` | On PD treatment at this visit | MDS-UPDRS Part III | numeric | 91.8 | 2 |
 | `RBDSQ_TOTAL` | REM Sleep Behaviour Disorder screening item sum | RBD Screening (item sum) | numeric | 66.9 | 13 |
-| `SCOPA_AUT_TOTAL` | SCOPA-AUT item sum | SCOPA-AUT (item sum) | numeric | 66.8 | 88 |
+| `SCOPA_AUT_TOTAL` | SCOPA-AUT item sum | SCOPA-AUT (item sum) | numeric | 66.8 | 53 |
 | `SEX` | Sex | Demographics | numeric | 100.0 | 2 |
 | `STAI_TOTAL` | State-Trait Anxiety Inventory item sum | STAI (item sum) | numeric | 66.6 | 72 |
 | `YRS_SINCE_DIAGNOSIS` | Years since diagnosis (derived) | Derived (PD Diagnosis History + visit date) | numeric | 91.8 | 740 |
@@ -81,24 +81,24 @@ column ever lands in a feature bucket.
 
 | Column | Description | Source table | Type | % present | Unique |
 |---|---|---|---|---|---|
-| `NHY` | Hoehn & Yahr stage — stage 3 is defined by postural instability | MDS-UPDRS Part III | numeric | 83.4 | 7 |
+| `NHY` | Hoehn & Yahr stage — stage 3 is defined by postural instability | MDS-UPDRS Part III | numeric | 83.1 | 6 |
 | `NP2FREZ` | Freezing (self-reported) | MDS-UPDRS Part II | numeric | 91.9 | 5 |
 | `NP2PTOT` | Part II total — contains the 3 items above | MDS-UPDRS Part II | numeric | 91.8 | 47 |
 | `NP2TRMR` | Tremor (self-reported) | MDS-UPDRS Part II | numeric | 92.0 | 5 |
 | `NP2WALK` | Walking and balance (self-reported) | MDS-UPDRS Part II | numeric | 91.9 | 5 |
-| `NP3FRZGT` | Freezing of gait | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3GAIT` | Gait | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3KTRML` | Kinetic tremor, left hand | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3KTRMR` | Kinetic tremor, right hand | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3PSTBL` | Postural stability | MDS-UPDRS Part III | numeric | 83.2 | 6 |
-| `NP3PTRML` | Postural tremor, left hand | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3PTRMR` | Postural tremor, right hand | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3RTALJ` | Rest tremor amplitude, lip/jaw | MDS-UPDRS Part III | numeric | 83.4 | 5 |
-| `NP3RTALL` | Rest tremor amplitude, left lower limb | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3RTALU` | Rest tremor amplitude, left upper limb | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3RTARL` | Rest tremor amplitude, right lower limb | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3RTARU` | Rest tremor amplitude, right upper limb | MDS-UPDRS Part III | numeric | 83.4 | 6 |
-| `NP3RTCON` | Constancy of rest tremor | MDS-UPDRS Part III | numeric | 83.4 | 6 |
+| `NP3FRZGT` | Freezing of gait | MDS-UPDRS Part III | numeric | 83.0 | 5 |
+| `NP3GAIT` | Gait | MDS-UPDRS Part III | numeric | 83.2 | 5 |
+| `NP3KTRML` | Kinetic tremor, left hand | MDS-UPDRS Part III | numeric | 83.3 | 5 |
+| `NP3KTRMR` | Kinetic tremor, right hand | MDS-UPDRS Part III | numeric | 83.3 | 5 |
+| `NP3PSTBL` | Postural stability | MDS-UPDRS Part III | numeric | 81.8 | 5 |
+| `NP3PTRML` | Postural tremor, left hand | MDS-UPDRS Part III | numeric | 83.3 | 5 |
+| `NP3PTRMR` | Postural tremor, right hand | MDS-UPDRS Part III | numeric | 83.4 | 5 |
+| `NP3RTALJ` | Rest tremor amplitude, lip/jaw | MDS-UPDRS Part III | numeric | 83.4 | 4 |
+| `NP3RTALL` | Rest tremor amplitude, left lower limb | MDS-UPDRS Part III | numeric | 83.3 | 5 |
+| `NP3RTALU` | Rest tremor amplitude, left upper limb | MDS-UPDRS Part III | numeric | 83.4 | 5 |
+| `NP3RTARL` | Rest tremor amplitude, right lower limb | MDS-UPDRS Part III | numeric | 83.3 | 5 |
+| `NP3RTARU` | Rest tremor amplitude, right upper limb | MDS-UPDRS Part III | numeric | 83.4 | 5 |
+| `NP3RTCON` | Constancy of rest tremor | MDS-UPDRS Part III | numeric | 83.4 | 5 |
 | `NP3TOT` | Part III total — contains the 13 items above | MDS-UPDRS Part III | numeric | 81.5 | 91 |
 
 ---
@@ -109,14 +109,14 @@ column ever lands in a feature bucket.
 
 | Column | Description | Source table | Type | % present | Unique |
 |---|---|---|---|---|---|
-| `LABEL` | TD / PIGD / Indeterminate — the target (Y) | Computed (Stebbins formula) | text | 83.0 | 3 |
-| `LABEL_FLIPPED_NEXT` | Whether the label changes at the next visit (transition target) | Computed (next-visit shift) | numeric | 71.0 | 2 |
+| `LABEL` | TD / PIGD / Indeterminate — the target (Y) | Computed (Stebbins formula) | text | 81.5 | 3 |
+| `LABEL_FLIPPED_NEXT` | Whether the label changes at the next visit (transition target) | Computed (next-visit shift) | numeric | 69.6 | 2 |
 | `MONTHS_TO_NEXT_VISIT` | Interval to next visit | Computed (next-visit shift) | numeric | 93.7 | 9 |
-| `NEXT_LABEL` | Label at the following visit (transition target) | Computed (next-visit shift) | text | 76.6 | 3 |
+| `NEXT_LABEL` | Label at the following visit (transition target) | Computed (next-visit shift) | text | 75.1 | 3 |
 | `NEXT_VISIT_MONTH` | Month of the following visit | Computed (next-visit shift) | numeric | 93.7 | 20 |
-| `PIGD_SCORE` | Mean of the 5 gait/balance items (Y component) | Computed (Stebbins formula) | numeric | 83.0 | 45 |
-| `TD_PIGD_RATIO` | Tremor / PIGD ratio (Y component) | Computed (Stebbins formula) | numeric | 81.0 | 265 |
-| `TREMOR_SCORE` | Mean of the 11 tremor items (Y component) | Computed (Stebbins formula) | numeric | 83.0 | 41 |
+| `PIGD_SCORE` | Mean of the 5 gait/balance items (Y component) | Computed (Stebbins formula) | numeric | 81.5 | 21 |
+| `TD_PIGD_RATIO` | Tremor / PIGD ratio (Y component) | Computed (Stebbins formula) | numeric | 79.5 | 192 |
+| `TREMOR_SCORE` | Mean of the 11 tremor items (Y component) | Computed (Stebbins formula) | numeric | 81.5 | 30 |
 
 ---
 

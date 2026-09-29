@@ -3,5 +3,5 @@ n = 216 patients (TD 175, PIGD 41), 25 features (GENETIC_COHORT removed; all-mis
 CV: StratifiedKFold x5 (one row per patient, so grouping is implicit)
 chance balanced accuracy = 0.500
 
-LOGISTIC  balanced_acc 0.584 ± 0.056   macro_F1 0.561
-HGB       balanced_acc 0.530 ± 0.038   macro_F1 0.531
+LOGISTIC  balanced_acc 0.553 ± 0.053   macro_F1 0.534
+HGB       balanced_acc 0.530 ± 0.042   macro_F1 0.532

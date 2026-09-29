@@ -5,24 +5,24 @@ GENETIC_COHORT,ADMIN,float64,100.0,2,Provenance / bookkeeping. Not a predictor.
 PDDXDT,ADMIN,object,100.0,113,Provenance / bookkeeping. Not a predictor.
 PDSTATE_USED,ADMIN,object,72.5,2,Provenance / bookkeeping. Not a predictor.
 SXDT,ADMIN,object,98.9,131,Provenance / bookkeeping. Not a predictor.
-NHY,BANNED_LABEL_DEFINING,float64,83.4,7,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NHY,BANNED_LABEL_DEFINING,float64,83.1,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
 NP2FREZ,BANNED_LABEL_DEFINING,float64,91.9,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
 NP2PTOT,BANNED_LABEL_DEFINING,float64,91.8,47,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
 NP2TRMR,BANNED_LABEL_DEFINING,float64,92.0,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
 NP2WALK,BANNED_LABEL_DEFINING,float64,91.9,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3FRZGT,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3GAIT,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3KTRML,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3KTRMR,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3PSTBL,BANNED_LABEL_DEFINING,float64,83.2,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3PTRML,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3PTRMR,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3RTALJ,BANNED_LABEL_DEFINING,float64,83.4,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3RTALL,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3RTALU,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3RTARL,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3RTARU,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
-NP3RTCON,BANNED_LABEL_DEFINING,float64,83.4,6,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3FRZGT,BANNED_LABEL_DEFINING,float64,83.0,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3GAIT,BANNED_LABEL_DEFINING,float64,83.2,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3KTRML,BANNED_LABEL_DEFINING,float64,83.3,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3KTRMR,BANNED_LABEL_DEFINING,float64,83.3,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3PSTBL,BANNED_LABEL_DEFINING,float64,81.8,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3PTRML,BANNED_LABEL_DEFINING,float64,83.3,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3PTRMR,BANNED_LABEL_DEFINING,float64,83.4,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3RTALJ,BANNED_LABEL_DEFINING,float64,83.4,4,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3RTALL,BANNED_LABEL_DEFINING,float64,83.3,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3RTALU,BANNED_LABEL_DEFINING,float64,83.4,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3RTARL,BANNED_LABEL_DEFINING,float64,83.3,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3RTARU,BANNED_LABEL_DEFINING,float64,83.4,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
+NP3RTCON,BANNED_LABEL_DEFINING,float64,83.4,5,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
 NP3TOT,BANNED_LABEL_DEFINING,float64,81.5,91,"Participates in computing Y (a Part II or Part III formula item, or a total/stage encoding them). MUST NEVER be used as a model input, regardless of how cheap it is to collect."
 AGE_AT_VISIT,CHEAP_FEATURE,float64,99.6,540,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 ESS_TOTAL,CHEAP_FEATURE,float64,66.9,25,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
@@ -45,7 +45,7 @@ NP2TURN,CHEAP_FEATURE,float64,92.0,5,"Patient-reported or low-cost clinical meas
 N_CONMEDS,CHEAP_FEATURE,float64,91.8,45,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 PDTRTMNT,CHEAP_FEATURE,float64,91.8,2,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 RBDSQ_TOTAL,CHEAP_FEATURE,float64,66.9,13,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
-SCOPA_AUT_TOTAL,CHEAP_FEATURE,float64,66.8,88,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
+SCOPA_AUT_TOTAL,CHEAP_FEATURE,float64,66.8,53,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 SEX,CHEAP_FEATURE,float64,100.0,2,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 STAI_TOTAL,CHEAP_FEATURE,float64,66.6,72,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
 YRS_SINCE_DIAGNOSIS,CHEAP_FEATURE,float64,91.8,740,"Patient-reported or low-cost clinical measure, plausibly available in a non-specialist setting. Core input set."
@@ -53,7 +53,7 @@ YRS_SINCE_SYMPTOM_ONSET,CHEAP_FEATURE,float64,90.8,831,"Patient-reported or low-
 EVENT_ID,KEY,object,100.0,21,Identifier / join key. Not a predictor.
 INFODT,KEY,object,91.8,191,Identifier / join key. Not a predictor.
 PATNO,KEY,int64,100.0,439,Identifier / join key. Not a predictor.
-VISIT_MONTH,KEY,int32,100.0,21,Identifier / join key. Not a predictor.
+VISIT_MONTH,KEY,int64,100.0,21,Identifier / join key. Not a predictor.
 APOE,RESOURCE_DEPENDENT_FEATURE,object,99.2,6,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
 CAUDATE_REF_CWM,RESOURCE_DEPENDENT_FEATURE,float64,12.6,141,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
 DATSCAN_VISINTRP,RESOURCE_DEPENDENT_FEATURE,object,95.2,2,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
@@ -66,11 +66,11 @@ PUTAMEN_REF_CWM,RESOURCE_DEPENDENT_FEATURE,float64,12.6,123,Imaging or genotypin
 SNCA,RESOURCE_DEPENDENT_FEATURE,object,99.2,2,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
 STRIATUM_REF_CWM,RESOURCE_DEPENDENT_FEATURE,float64,12.6,121,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
 VPS35,RESOURCE_DEPENDENT_FEATURE,object,99.1,1,Imaging or genotyping. Rarely available in low-resource settings (~94% of surveyed Indian clinicians rarely order these). Use only in the 'with-imaging/genetics' variant.
-LABEL,TARGET,object,83.0,3,Outcome or label-derived quantity. Never a predictor.
-LABEL_FLIPPED_NEXT,TARGET,float64,71.0,2,Outcome or label-derived quantity. Never a predictor.
+LABEL,TARGET,object,81.5,3,Outcome or label-derived quantity. Never a predictor.
+LABEL_FLIPPED_NEXT,TARGET,float64,69.6,2,Outcome or label-derived quantity. Never a predictor.
 MONTHS_TO_NEXT_VISIT,TARGET,float64,93.7,9,Outcome or label-derived quantity. Never a predictor.
-NEXT_LABEL,TARGET,object,76.6,3,Outcome or label-derived quantity. Never a predictor.
+NEXT_LABEL,TARGET,object,75.1,3,Outcome or label-derived quantity. Never a predictor.
 NEXT_VISIT_MONTH,TARGET,float64,93.7,20,Outcome or label-derived quantity. Never a predictor.
-PIGD_SCORE,TARGET,float64,83.0,45,Outcome or label-derived quantity. Never a predictor.
-TD_PIGD_RATIO,TARGET,float64,81.0,265,Outcome or label-derived quantity. Never a predictor.
-TREMOR_SCORE,TARGET,float64,83.0,41,Outcome or label-derived quantity. Never a predictor.
+PIGD_SCORE,TARGET,float64,81.5,21,Outcome or label-derived quantity. Never a predictor.
+TD_PIGD_RATIO,TARGET,float64,79.5,192,Outcome or label-derived quantity. Never a predictor.
+TREMOR_SCORE,TARGET,float64,81.5,30,Outcome or label-derived quantity. Never a predictor.

@@ -1,7 +1,7 @@
 ==============================================================================
 01_preprocess_tdpigd.py
-Run started: 2026-09-28T19:43:35
-Raw input directory: C:\Users\rutu2\Windows\Desktop\Major Project\Major_project\data\raw\ppmi_csv
+Run started: 2026-09-30T01:46:33
+Raw input directory: /sessions/awesome-zen-cori/mnt/PF/trace-pd/data/raw/ppmi_csv
 ==============================================================================
 
 [STEP 1] Cohort definition
@@ -16,6 +16,7 @@ COHORT
 
 [STEP 2] MDS-UPDRS Part III (item level, ON/OFF de-duplication)
   Raw Part III rows: 39255
+  Part III cells coded 101 (unable to rate) -> NaN: 7570
   Duplicate PATNO+EVENT_ID rows before de-dup: 6894
   Rows after keeping one (OFF-preferred) per patient-visit: 32361
   PDSTATE_USED distribution:
@@ -28,6 +29,7 @@ ON      3072
   Part II rows retained: 37692
 
 [STEP 4] Other clinical instruments
+  SCOPA-AUT cells coded 9 (not applicable) -> NaN: 24513
   Medication: building LEDD via date-interval join (not EVENT_ID)
     LEDD log rows: 10071; numeric LEDD parsed: 93.6%
 
@@ -63,33 +65,33 @@ VISIT_MONTH
 24    500.0
 
 [STEP 9] Computing TD/PIGD label (Stebbins et al. 2013)
-  Rows with all 11 tremor items present : 5756
-  Rows with all  5 PIGD  items present  : 5742
-  Rows with a fully computable label    : 5742 (83.0% of 6922 rows)
+  Rows with all 11 tremor items present : 5742
+  Rows with all  5 PIGD  items present  : 5640
+  Rows with a fully computable label    : 5638 (81.5% of 6922 rows)
   Edge case -- PIGD score == 0 (ratio undefined): 845 rows
   Label distribution (visit level):
 LABEL
-TD               3020
-PIGD             2102
-NaN              1180
-INDETERMINATE     620
+TD               3016
+PIGD             2004
+NaN              1284
+INDETERMINATE     618
   Label distribution (%):
 LABEL
-TD               52.6
-PIGD             36.6
-INDETERMINATE    10.8
+TD               53.5
+PIGD             35.5
+INDETERMINATE    11.0
 
 [STEP 10] Transition / label-flip target
-  Consecutive visit pairs with both labels known: 4918
-  Visit-to-visit flip rate: 29.1%
+  Consecutive visit pairs with both labels known: 4818
+  Visit-to-visit flip rate: 28.7%
   Flip rate by current label:
                flip_%  n_pairs
 LABEL                         
-INDETERMINATE    76.3      545
-PIGD             27.1     1629
-TD               20.9     2744
+INDETERMINATE    76.2      541
+PIGD             27.0     1555
+TD               20.2     2722
   Patients with >=2 labelled visits: 439
-  Of those, ever changed label: 355 (80.9%)
+  Of those, ever changed label: 344 (78.4%)
 
 [STEP 11] Feature buckets / data dictionary
   Columns per bucket:
@@ -108,13 +110,13 @@ KEY                            4
   Round 1 (BL)                  : 438 patients
   Round 2 (BL+6)                : 349 patients
   Round 3 (BL+6+12)             : 323 patients
-  Round 4 (BL+6+12+24)          : 275 patients
-  ALT annual-only (BL+12)       : 403 patients
-  ALT annual-only (BL+12+24)    : 343 patients
+  Round 4 (BL+6+12+24)          : 269 patients
+  ALT annual-only (BL+12)       : 402 patients
+  ALT annual-only (BL+12+24)    : 337 patients
 
 [STEP 13] Writing outputs
-  C:\Users\rutu2\Windows\Desktop\Major Project\Major_project\data\processed\ppmi_tdpigd_long.csv: 6922 rows x 75 cols
-  C:\Users\rutu2\Windows\Desktop\Major Project\Major_project\data\processed\ppmi_tdpigd_dictionary.csv: 75 column definitions
+  /sessions/awesome-zen-cori/mnt/PF/trace-pd/data/processed/ppmi_tdpigd_long.csv: 6922 rows x 75 cols
+  /sessions/awesome-zen-cori/mnt/PF/trace-pd/data/processed/ppmi_tdpigd_dictionary.csv: 75 column definitions
   Duplicate PATNO+EVENT_ID rows in output: 0
 
-Run finished: 2026-09-28T19:43:39
+Run finished: 2026-09-30T01:46:36

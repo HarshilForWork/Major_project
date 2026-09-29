@@ -224,6 +224,17 @@ p3_cols = ["PATNO", "EVENT_ID", "INFODT", "PDSTATE", "PDTRTMNT"] + \
           LABEL_DEFINING_P3 + ["NP3TOT", "NHY"]
 p3 = keep(p3_raw, p3_cols)
 
+# PPMI codes "unable to rate" (UR) in Part III as the NUMBER 101, not only as the
+# string "UR". Left as-is, 101 enters the tremor / PIGD means as a real score and
+# silently forces a PIGD label (bug found 30 Sep 2026: 104 labelled rows, 98 of
+# them PIGD). Treat it as missing, so the completeness rule leaves the visit
+# unlabelled. Valid item scores are 0-4; NHY is 0-5.
+_ur_cols = LABEL_DEFINING_P3 + ["NHY"]
+p3[_ur_cols] = p3[_ur_cols].apply(pd.to_numeric, errors="coerce")
+_n_ur = int((p3[_ur_cols] == 101).sum().sum())
+p3[_ur_cols] = p3[_ur_cols].mask(p3[_ur_cols] == 101)
+log(f"  Part III cells coded 101 (unable to rate) -> NaN: {_n_ur}")
+
 dups_before = p3.duplicated(subset=["PATNO", "EVENT_ID"]).sum()
 # Prefer the OFF-medication assessment: sort so OFF sorts first, keep first.
 p3["_off_pref"] = (p3["PDSTATE"] != "OFF").astype(int)
@@ -261,7 +272,15 @@ moca = keep(load("Montreal_Cognitive_Assessment__MoCA__16Aug2026.csv"),
             ["PATNO", "EVENT_ID", "MCATOT"])
 
 scopa = load("SCOPA-AUT_16Aug2026.csv")
-scopa = item_sum(scopa, [f"SCAU{i}" for i in range(1, 26)], "SCOPA_AUT_TOTAL")
+# SCOPA-AUT items are scored 0-3; PPMI codes "not applicable" (e.g. the sexual-
+# function or catheter items) as 9. Summed raw, each 9 added 9 points of fake
+# autonomic burden (bug found 30 Sep 2026: 24,513 raw cells). Treat as missing.
+_scau = [f"SCAU{i}" for i in range(1, 26)]
+_scau = [c for c in _scau if c in scopa.columns]
+scopa[_scau] = scopa[_scau].apply(pd.to_numeric, errors="coerce")
+log(f"  SCOPA-AUT cells coded 9 (not applicable) -> NaN: {int((scopa[_scau] == 9).sum().sum())}")
+scopa[_scau] = scopa[_scau].mask(scopa[_scau] == 9)
+scopa = item_sum(scopa, _scau, "SCOPA_AUT_TOTAL")
 scopa = keep(scopa, ["PATNO", "EVENT_ID", "SCOPA_AUT_TOTAL"])
 
 gds = load("Geriatric_Depression_Scale__Short_Version__16Aug2026.csv")

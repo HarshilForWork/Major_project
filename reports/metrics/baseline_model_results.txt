@@ -16,85 +16,85 @@ Out-of-fold performance:
           accuracy  balanced_acc  macro_F1  weighted_F1
 model                                                  
 MAJORITY     0.607         0.333     0.252        0.459
-LOGISTIC     0.502         0.445     0.430        0.538
-HGB          0.580         0.457     0.455        0.583
+LOGISTIC     0.495         0.450     0.431        0.532
+HGB          0.578         0.458     0.457        0.580
 
 Per-class detail (HGB):
                precision    recall  f1-score   support
 
-           TD      0.725     0.703     0.714       266
-         PIGD      0.449     0.467     0.458       122
-INDETERMINATE      0.189     0.200     0.194        50
+           TD      0.708     0.703     0.706       266
+         PIGD      0.462     0.451     0.456       122
+INDETERMINATE      0.200     0.220     0.210        50
 
-     accuracy                          0.580       438
-    macro avg      0.454     0.457     0.455       438
- weighted avg      0.587     0.580     0.583       438
+     accuracy                          0.578       438
+    macro avg      0.457     0.458     0.457       438
+ weighted avg      0.582     0.578     0.580       438
 
 Confusion matrix (rows = true, cols = predicted): ['TD', 'PIGD', 'INDETERMINATE']
                 TD  PIGD  INDETERMINATE
-TD             187    53             26
-PIGD            48    57             17
-INDETERMINATE   23    17             10
+TD             187    50             29
+PIGD            52    55             15
+INDETERMINATE   25    14             11
 
 ==========================================================================
 EXPERIMENT 2 -- all scheduled visits pooled
 ==========================================================================
-n = 5742 rows, 439 patients
-Class distribution: TD 3020 (52.6%), PIGD 2102 (36.6%), INDETERMINATE 620 (10.8%)
+n = 5638 rows, 439 patients
+Class distribution: TD 3016 (53.5%), PIGD 2004 (35.5%), INDETERMINATE 618 (11.0%)
 CV: StratifiedGroupKFold grouped by PATNO (prevents patient leakage)
 
 Out-of-fold performance:
           accuracy  balanced_acc  macro_F1  weighted_F1
 model                                                  
-MAJORITY     0.526         0.333     0.230        0.363
-LOGISTIC     0.539         0.469     0.463        0.567
-HGB          0.541         0.458     0.455        0.561
+MAJORITY     0.535         0.333     0.232        0.373
+LOGISTIC     0.529         0.461     0.454        0.556
+HGB          0.545         0.452     0.451        0.561
 
 Per-class detail (HGB):
                precision    recall  f1-score   support
 
-           TD      0.696     0.584     0.635      3020
-         PIGD      0.572     0.577     0.574      2102
-INDETERMINATE      0.122     0.213     0.155       620
+           TD      0.691     0.601     0.643      3016
+         PIGD      0.559     0.570     0.564      2004
+INDETERMINATE      0.118     0.186     0.145       618
 
-     accuracy                          0.541      5742
-    macro avg      0.463     0.458     0.455      5742
- weighted avg      0.588     0.541     0.561      5742
+     accuracy                          0.545      5638
+    macro avg      0.456     0.452     0.451      5638
+ weighted avg      0.581     0.545     0.561      5638
 
 Confusion matrix (rows = true, cols = predicted): ['TD', 'PIGD', 'INDETERMINATE']
                  TD  PIGD  INDETERMINATE
-TD             1765   681            574
-PIGD            511  1212            379
-INDETERMINATE   261   227            132
+TD             1814   687            515
+PIGD            521  1142            341
+INDETERMINATE   289   214            115
 
 ==========================================================================
 EXPERIMENT 3 -- binary TD vs PIGD, all visits (Indeterminate dropped: it is a 0.90-1.15 ratio band, 76% unstable visit-to-visit)
 ==========================================================================
-n = 5122 rows, 439 patients
-Class distribution: TD 3020 (59.0%), PIGD 2102 (41.0%)
+n = 5020 rows, 439 patients
+Class distribution: TD 3016 (60.1%), PIGD 2004 (39.9%)
 CV: StratifiedGroupKFold grouped by PATNO (prevents patient leakage)
 
 Out-of-fold performance:
           accuracy  balanced_acc  macro_F1  weighted_F1
 model                                                  
-MAJORITY     0.590         0.500     0.371        0.437
-LOGISTIC     0.700         0.696     0.693        0.701
-HGB          0.695         0.690     0.688        0.696
+MAJORITY     0.601         0.500     0.375        0.451
+LOGISTIC     0.698         0.694     0.690        0.700
+HGB          0.695         0.689     0.686        0.697
 
 Per-class detail (HGB):
               precision    recall  f1-score   support
 
-          TD      0.754     0.716     0.734      3020
-        PIGD      0.619     0.664     0.641      2102
+          TD      0.762     0.715     0.738      3016
+        PIGD      0.608     0.664     0.634      2004
 
-    accuracy                          0.695      5122
-   macro avg      0.687     0.690     0.688      5122
-weighted avg      0.699     0.695     0.696      5122
+    accuracy                          0.695      5020
+   macro avg      0.685     0.689     0.686      5020
+weighted avg      0.700     0.695     0.697      5020
 
 Confusion matrix (rows = true, cols = predicted): ['TD', 'PIGD']
         TD  PIGD
-TD    2162   858
-PIGD   706  1396
+TD    2157   859
+PIGD   674  1330
 
 ==========================================================================
 EXPERIMENT 4 -- LEAKAGE POSITIVE CONTROL (not a result; diagnostic only)
@@ -103,7 +103,7 @@ Deliberately FEEDS the banned Y-defining items back in. If the pipeline is
 wired correctly this must score near-perfectly, confirming that the low
 scores above reflect a genuinely hard task rather than a broken pipeline.
 
-With Y-defining items included -> accuracy 0.907, macro-F1 0.848
+With Y-defining items included -> accuracy 0.905, macro-F1 0.842
 (Expected ~1.0. This is exactly the meaningless result the strict policy avoids.)
 
 ==========================================================================
@@ -112,12 +112,12 @@ SUMMARY -- balanced accuracy / macro-F1 vs. the majority-class baseline
 
 Balanced accuracy:
 model                     MAJORITY  LOGISTIC    HGB
-Exp 1: Round 1 (BL only)     0.333     0.445  0.457
-Exp 2: all visits            0.333     0.469  0.458
-Exp 3: TD vs PIGD binary     0.500     0.696  0.690
+Exp 1: Round 1 (BL only)     0.333     0.450  0.458
+Exp 2: all visits            0.333     0.461  0.452
+Exp 3: TD vs PIGD binary     0.500     0.694  0.689
 
 Macro F1:
 model                     MAJORITY  LOGISTIC    HGB
-Exp 1: Round 1 (BL only)     0.252     0.430  0.455
-Exp 2: all visits            0.230     0.463  0.455
-Exp 3: TD vs PIGD binary     0.371     0.693  0.688
+Exp 1: Round 1 (BL only)     0.252     0.431  0.457
+Exp 2: all visits            0.232     0.454  0.451
+Exp 3: TD vs PIGD binary     0.375     0.690  0.686
