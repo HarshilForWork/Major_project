@@ -136,6 +136,9 @@ is doing*, it's what produced §2.2–2.4.
 
 ### Candidate — "Flip anatomy": explaining subtype transitions
 
+> **Update 30 Sep:** implemented and tested — see [`flip_anatomy.md`](flip_anatomy.md). The
+> medication-state component validates; the noise-vs-genuine split does not.
+
 Explain **each observed subtype transition** by decomposing it into causes that can be checked
 exactly, because we hold the items, the formula and the exam's medication state:
 
