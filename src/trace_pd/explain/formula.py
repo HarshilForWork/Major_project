@@ -34,7 +34,7 @@ ZONE_NAMES = np.array(["PIGD", "INDETERMINATE", "TD"])
 
 
 def distance_to_cutoff(l):
-    """Signed distance (log units) from l to the nearest cutoff. Positive = inside its zone
-    by that margin; the explanation reports how far the patient is from switching subtype."""
+    """Unsigned distance (log units) from l to the nearest cutoff -- how far the patient is
+    from switching subtype."""
     l = np.asarray(l, float)
     return np.minimum(np.abs(l - CUT_PIGD), np.abs(l - CUT_TD))

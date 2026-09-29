@@ -1,22 +1,28 @@
 # FCX — Formula-Coordinate Explanations
 
-**Our explainability framework for TRACE-PD.** It explains the three models' **predictions**
-— the subtype classifier, the conformal sets and the transition-risk model — in the
-coordinates of the published Stebbins formula. Because we hold the true exam scores, every
-explanation is scored against ground truth.
+**Our explainability framework for TRACE-PD.** FCX explains the three models' **predictions**
+— the subtype classifier, the conformal sets and the transition-risk model. It works in the
+coordinates of the published Stebbins formula: the tremor/gait log-ratio, its two cutoffs, and
+a tremor channel vs a gait channel. Every explanation is scored against the true exam scores.
 
 | | |
 |---|---|
-| Code | `src/trace_pd/explain/` — `formula.py`, `shapley.py`, `implied_exam.py`, `straddle.py`, `pdn.py` |
-| Evaluation | `src/trace_pd/evaluation/evaluate_fcx.py` → `reports/metrics/fcx_results.txt` |
+| Code | `src/trace_pd/explain/` — `formula`, `shapley`, `implied_exam`, `straddle`, `pdn`, `trajectory` |
+| Evaluation | `evaluation/evaluate_fcx.py` → `reports/metrics/fcx_results[_xgb].txt` |
+| C3 validation | `evaluation/validate_c3.py` → `reports/metrics/c3_validation[_xgb].txt` |
 | Figure | `reports/figures/fig_fcx_summary.png` |
-| Tests | `tests/test_fcx.py` (7 invariants) |
-| Run | `make fcx` |
+| Tests | `tests/test_fcx.py` (12 invariants) |
+| Run | `make fcx` · `make c3` · add `--backend xgb` to run the black boxes on XGBoost |
 
-Everything is our own implementation, including the Shapley estimator. There is no SHAP or
-LIME dependency; SHAP-style attribution appears only as the **baseline** we compare against.
-Black boxes here are sklearn gradient boosting. FCX only needs `predict` / `predict_proba`,
-so it runs unchanged on XGBoost.
+Everything is our own implementation, including the Shapley estimator (no SHAP/LIME
+dependency); SHAP-style attribution appears only as the **baseline**.
+
+**Model-agnostic, checked:** the pre-audit run on XGBoost matched sklearn gradient boosting
+almost exactly (C1 fidelity 89.7% vs 89.6%; C2 κ 0.60 vs 0.61).
+
+> **Status 30 Sep, after a code audit.** An independent review found 15 issues; all are fixed
+> (§5). Three of them changed what we can claim — read §5 before quoting any number. The numbers
+> below are the **post-audit sklearn run**. The post-audit XGBoost re-run is pending.
 
 ![FCX summary](../reports/figures/fig_fcx_summary.png)
 
@@ -24,176 +30,171 @@ so it runs unchanged on XGBoost.
 
 ## 0. The coordinate system
 
-The label is a **known formula** over hidden exam items:
-
 ```
-ℓ = log(T + ε) − log(P + ε)          T = mean of 11 tremor items, P = mean of 5 gait items
-PIGD if ℓ ≤ log 0.90 · TD if ℓ ≥ log 1.15 · Indeterminate otherwise
+ℓ = log(T + ε) − log(P + ε)        T = mean of 11 tremor items, P = mean of 5 gait items, ε = 0.5/16
+PIGD if ℓ ≤ log 0.90  ·  TD if ℓ ≥ log 1.15  ·  Indeterminate otherwise
 ```
 
-With ε = 0.5 / 16 these zones reproduce **100%** of the stored labels. FCX expresses every
-explanation in ℓ, split into a **tremor channel** (log T) and a **gait channel** (log P).
-Those are the formula's own quantities and cutoffs.
+These zones reproduce **100%** of the stored labels (a test enforces it).
 
 ---
 
-## C1 — Implied-Exam Explanation (explains the subtype classifier)
+## C1 — Implied-Exam Explanation (subtype classifier)
 
 **Method.**
 
-1. Two concept heads estimate the scores the classifier *behaves as if* it had seen:
-   ĥ_T(x) ≈ log T and ĥ_P(x) ≈ log P. The implied ratio is ℓ̂ = ĥ_T − ĥ_P.
-2. **Fidelity calibration:** choose the cutoff c* on ℓ̂ so that the implied decision
-   reproduces the classifier's decisions.
-3. Feature attributions via our own interventional Shapley, on each head. Because ℓ̂ is a
-   difference, they split **exactly** into channels: φ_j(ℓ̂) = φ_j(ĥ_T) − φ_j(ĥ_P). Units are
-   log-ratio, i.e. distance moved toward or away from the cutoff.
+- Concept heads ĥ_T(x) ≈ log T and ĥ_P(x) ≈ log P give the implied ratio ℓ̂ = ĥ_T − ĥ_P.
+- The cutoff c* is fitted so the implied decision reproduces the classifier.
+- Our own interventional Shapley on each head splits every feature's attribution **exactly**
+  into channels: φ_j(ℓ̂) = φ_j(ĥ_T) − φ_j(ĥ_P). A test checks the additivity.
 
-**Identifiability.** The formula uses T and P only through their ratio, and only via three
-zones. The classifier's output alone therefore can't identify T and P separately. The heads
-are trained with concept supervision (the true scores), and fidelity to the classifier is
-**measured**, not assumed.
-
-**Output example:**
-
-> *Predicted PIGD. The model behaves as if tremor ≈ 0.11 and gait ≈ 1.05 (implied ratio 0.13;
-> cutoff 1.02). Main drivers: LEDD_TOTAL_MG via the **tremor** channel; NP2TURN via the
-> tremor channel; NP2RISE via the gait channel.*
-
-**Results:**
+**Identifiability.** The formula depends on T and P only through three zones of their ratio, so
+the classifier's output alone can't identify them. The heads are therefore concept-supervised,
+and fidelity is **measured**, not assumed.
 
 | Metric | Value | Reading |
 |---|---|---|
-| **Fidelity** — implied decision = classifier decision | **89.6%** | C1 is a faithful account of the classifier |
-| Rank corr, classifier P(PIGD) vs implied −ℓ̂ | **0.923** | it tracks the classifier's confidence too |
-| Balanced accuracy vs truth: classifier / implied exam | 0.686 / 0.688 | explaining this way costs nothing |
-| **Alignment** — implied vs TRUE gait score | r = **0.57** | the model's gait belief is partly right |
-| **Alignment** — implied vs TRUE tremor score | r = **0.25** | **the model is nearly blind to tremor** |
-| Stability across background / seed | 0.879 (Shapley-on-classifier: 0.880) | as stable as the baseline |
-| Error attribution: which channel is wrong on a misclassification | FCX 0.52 · baseline 0.45 · chance 0.50 | ❌ **no method manages it** — reported as a negative result |
+| **Fidelity** — implied decision = classifier decision | **89.6%** | faithful surrogate |
+| Rank corr, P(PIGD) vs implied −ℓ̂ | **0.92** | tracks the classifier's confidence too |
+| Balanced accuracy: classifier / implied exam | 0.686 / 0.688 | no accuracy cost |
+| **Alignment** — implied vs TRUE gait score | r = **0.57** | |
+| **Alignment** — implied vs TRUE tremor score | r = **0.25** | cheap features carry little tremor information |
+| Stability across background / seed | 0.879 (Shapley-on-classifier 0.886) | comparable |
+| Error attribution (which of the explainer's channels is wrong) | FCX 0.47–0.53 · baseline 0.47 · chance 0.50 | ❌ no method does it — negative result |
 
-**What C1 reveals that plain SHAP can't.**
+**What C1 shows:**
 
-- The classifier's gait belief tracks the truth (0.57); its tremor belief barely does (0.25).
-  Questionnaire data carries almost no tremor information, so **the model's TD calls rest
-  mostly on "no gait problems" rather than on seeing tremor.**
-- The largest tremor-channel driver is **LEDD** (medication dose). The model has learned
-  that medicated patients show less tremor — medication *suppressing* tremor on the exam.
-  That's the same artefact as the 25.6% OFF/ON label disagreement (README §9.7). FCX makes it
-  visible because the attribution lands in the tremor channel.
-- The top gait-channel driver is **NP2RISE** (rising from a chair), an axial item. That's
-  consistent with the proxy-leakage concern in README §9.3.
+- **Channel alignment.** The cheap features let the model estimate gait moderately and
+  tremor poorly.
+- **LEDD is the biggest tremor-channel driver.** The model has learned that medicated patients
+  show less tremor, the same medication artefact as the 25.6% OFF/ON label disagreement.
+- **NP2RISE is the biggest gait-channel driver.** That's consistent with the axial
+  proxy-leakage concern.
+
+> **Wording, corrected in the audit.** r = 0.25 measures the explainer's *tremor head*
+> (what the cheap features reveal about tremor), not the classifier itself. The accurate claim
+> is "the information the classifier has about tremor is weak". The earlier wording, "the
+> model is blind to tremor", said more than the data shows.
 
 ---
 
-## C2 — Cutoff-Straddle Explanation (explains the conformal set)
+## C2 — Cutoff-Straddle Explanation (conformal sets)
 
 **Method.**
 
-1. Quantile heads give a half-width per channel: hw_T(x), hw_P(x).
-2. The implied-ratio interval is ℓ̂ ± κ (hw_T + hw_P).
-3. **Fidelity calibration:** κ is chosen on held-out calibration rows so that "the interval
-   straddles the cutoff" reproduces the black-box conformal set's ambiguity.
-4. **Blame:**
-
-   ```
-   d = |ℓ̂ − cutoff|
-   resolves if tremor known   ⇔  d ≥ κ·hw_P
-   resolves if gait known     ⇔  d ≥ κ·hw_T
-   ```
-
-   Blame goes to the channel whose removal resolves the straddle. If both do, the one with the
-   larger half-width. If neither, "both".
-5. **Verification:** substitute the TRUE score of the blamed channel and check whether the
-   straddle really resolves.
-
-**Output example:**
-
-> *Set {TD, PIGD}: the implied-ratio interval [0.81, 3.18] straddles the cutoff. Responsible
-> channel: tremor. Examining tremor would settle it.*
-
-**Results:**
+1. Per-channel half-widths come from quantile heads.
+2. The implied interval is ℓ̂ ± κ(hw_T + hw_P), with κ fidelity-calibrated to the black-box
+   set ambiguity.
+3. **Blame:** the channel whose uncertainty, if removed, ends the straddle.
 
 | Metric | Value |
 |---|---|
 | Black-box LAC coverage / ambiguous sets | 90.1% / 54.8% |
-| **Fidelity** — straddle = ambiguous set | **80.8%**, Cohen's κ **0.61** (substantial) |
-| Ambiguous sets explained by a straddle | **83.2%** |
-| **Verified** — blamed *tremor*: revealing the true tremor score resolves it | **83%** (other channel: 59%) |
-| **Verified** — blamed *gait*: revealing the true gait score resolves it | **78%** (other channel: 71%) |
-| **vs baseline** on the same straddles: blamed channel really resolves it | **FCX 81%** · grouped Shapley on classifier 68% · random channel 73% |
+| **Fidelity** — straddle = ambiguous set | **80.8%**, Cohen's κ **0.61** ✅ |
+| Ambiguous sets explained by a straddle | 83.2% |
 
-**Reading:** FCX's "which part of the exam would settle this" is **verified correct 81% of the
-time**, beating a SHAP-style grouping (68%) and a random pick (73%). Across all straddles,
-revealing tremor resolves 80% and gait 59%. The model is uncertain mostly because it
-**can't see tremor**, which matches C1.
+**Verifying "examining the blamed channel would settle it".** This was the audit's key
+correction.
 
-> **Caveat.** With κ calibrated for fidelity, the channel intervals are the model's
-> *effective* uncertainty, not valid prediction intervals for the true scores (they cover the
-> true tremor score only 25% of the time). They explain the conformal set; they aren't a new
-> guarantee.
+| Test | Result |
+|---|---|
+| Old test: revealing the blamed channel's true score ends the *explainer's own* straddle | 82% |
+| **Null:** same test with true scores **shuffled** across patients | **77%** → only **+5 pts** is real; the rest is mechanical |
+| **Real test:** give the conformal model the true score of the blamed channel → does *its* set collapse? | FCX blame **90%** · other channel 59% · random 74% · grouped Shapley 68% |
+| **Trivial rule: always examine tremor** | **94%** — beats FCX's per-patient blame |
+| When FCX blames **gait** (n = 160) | gait exam collapses 61%, tremor exam 91% |
+
+**Honest reading:**
+
+- **The per-patient blame is not better than the simple rule "examine tremor".**
+- **The population finding is strong and actionable:** a tremor exam collapses **95%** of
+  ambiguous conformal sets; a gait exam collapses **53%**.
+- **What C2 validly delivers:** a faithful account of *why* a set is ambiguous (κ 0.61), plus
+  that population-level recommendation.
 
 ---
 
-## C3 — Proximity / Drift / Noise (explains the transition-risk model)
+## C3 — Proximity / Drift / Noise (transition risk)
 
-**Method.**
+**Method.** Heads estimate the smoothed underlying ratio η̂, its drift μ̂ and the visit
+noise σ̂, with targets taken from the true trajectory over **adjacent scheduled visits only**.
 
-1. Heads estimate the smoothed underlying ratio η̂(x), its drift to the next visit μ̂(x), and
-   visit-to-visit noise σ̂(x). Targets come from the **true** ℓ trajectory, smoothed
-   leave-visit-out.
-2. A closed-form first-passage surrogate gives the flip probability:
+- A closed-form first-passage surrogate gives the flip probability.
+- **Component-calibrated fidelity:** logit g3 ≈ α + Σ b_c·s_c, with non-negative weights, where
+  s_c is the surrogate's exact Shapley component.
+- The explanation is φ_c = b_c·s_c.
 
-   ```
-   p = E_η [ 1 − Σ_zone π_z(η, σ) · π_z(η + μ, σ) ]
-   ```
+**Validation (`validate_c3.py`):**
 
-3. It is calibrated to the black box with two parameters: logit g3 ≈ α + β · logit p.
-4. **Exact** 3-player Shapley splits each predicted risk into **proximity + drift + noise**.
+| Black box | AUROC | C3 fidelity R² | Risk = proximity / drift / noise | Noise-vs-drift flips: C3 / grouped Shapley |
+|---|---|---|---|---|
+| E1 cheap features (deployment) | 0.52 | 0.18 | 75 / 2 / 22 | 0.52 / 0.51 |
+| **E2 exam done at visit t** | **0.77** | **0.62** | **83 / 3 / 13** | 0.49 / 0.51 |
+| **E3 exam done, sustained flip** | **0.79** | 0.56 | 84 / 6 / 10 | 0.64 / 0.66 |
 
-**Results:**
+**Planted-mechanism test:**
 
-| Metric | Value |
+| Planted | Result |
 |---|---|
-| Black-box transition model AUROC | **0.527** (out-of-fold upstream features) |
-| Fidelity: corr(logit g3, surrogate) / surrogate AUROC | 0.37 / 0.54 |
-| **What the model's risk is made of** | **proximity 56% · drift 8% · noise 36%** |
-| Noise-vs-drift flip identification (AUROC) | FCX 0.50 · grouped Shapley 0.49 |
+| Trained proximity-only box (AUROC 0.77) | ✅ PASS — proximity 92%, weight +1.30 |
+| Trained drift-only / noise-only boxes | ⚪ INCONCLUSIVE — those boxes have no signal (AUROC ≈ 0.50) |
+| **Synthetic planted mechanisms** on the real feature distribution | ✅ **3/3 recovered** (e.g. planted drift → b_D 14.3, others 0.00) |
 
-**Reading — an important finding, not only an explanation.** Built leak-free, **the transition
-model is near chance (AUROC 0.53)**. C3's decomposition shows why: **only 8%** of its predicted
-risk comes from real drift. The rest is proximity and noise, which cheap features can barely
-estimate.
+**Honest reading:**
 
-Rutu's earlier 0.65 used upstream subtype probabilities computed **in-sample**
-(`NEXT_STEPS_RUTU.md` §3). This suggests most of that signal was leakage. **C3 can't be
-validated against a near-chance model.** It is implemented and tested, and it will become
-meaningful once a transition target with real signal exists (e.g. sustained transitions,
-`docs/flip_anatomy.md` §6).
+- **Faithful.** C3 reproduces a transition model that has signal (R² 0.62), and it recovers
+  planted mechanisms correctly.
+- **The explanation it gives is consistent:** transition risk is **~85% proximity to a
+  cutoff**, drift ≈ 3–6%. It predicts *instability near a threshold*, not progression.
+- **Where it fails:** C3 does **not** beat grouped Shapley at identifying which observed flips
+  are noise vs drift (0.64 vs 0.66).
+- **Deployment setting:** the cheap-feature transition model is near chance (0.52), which
+  suggests the earlier 0.65 was in-sample leakage (`NEXT_STEPS_RUTU.md` §3).
 
 ---
 
 ## Summary
 
-| Component | Explains | Validated? | Headline |
-|---|---|---|---|
-| **C1** Implied exam | subtype classifier | ✅ fidelity 89.6%, alignment measured | the model is nearly blind to tremor; LEDD acts through the tremor channel |
-| **C2** Cutoff straddle | conformal sets | ✅ fidelity κ 0.61; blame verified 81% vs 68% SHAP-style baseline | tells the clinician *which part of the exam* would settle an ambiguous case |
-| **C3** Proximity–drift–noise | transition risk | ⚠️ implemented; black box near chance | the transition model has almost no drift signal |
+| Component | Validated claim | What did not hold |
+|---|---|---|
+| **C1** | faithful (89.6%) channel-split explanation; LEDD acts via the tremor channel; tremor information is weak | per-case error attribution (chance for every method) |
+| **C2** | faithful explanation of set ambiguity (κ 0.61); a tremor exam collapses 95% of ambiguous sets | per-patient "which exam part" blame loses to "always tremor" |
+| **C3** | faithful on a model with signal (R² 0.62); recovers planted mechanisms 3/3; risk is ~85% proximity | noise-vs-drift identification no better than grouped Shapley |
 
-**Novelty positioning** (see `explainability_framework_proposal.md` §3):
+**Novelty positioning** (`explainability_framework_proposal.md` §3):
 
-- The closest prior work is post-hoc concept bottleneck models (learned head), a 2026
-  glioblastoma CBM (trained, not post-hoc) and COCOCO (discrete logic).
-- FCX differs by explaining an **unmodified black box** in the coordinates of a **fixed clinical
-  formula**. It explains conformal ambiguity as a **cutoff straddle with verified channel
-  blame**, and reports **fidelity, alignment and verification** separately.
-- Novelty-agent confidence ~0.65. The strongest validated contribution is **C2**.
+- FCX explains **unmodified black boxes in the coordinates of a fixed clinical formula**.
+- Its three components each validate on **fidelity**, and each report a component-level
+  finding.
+- Post-hoc CBMs use a learned head; the TRACE glioblastoma CBM is trained, not post-hoc;
+  COCOCO works with discrete logic.
 
-**Limitations:**
+The strongest publishable pieces:
 
-- Error attribution in C1 fails for every method tried.
-- C2's intervals are fidelity-calibrated, not coverage-valid.
-- C3 awaits a transition model with signal.
-- Black boxes are sklearn gradient boosting in this run.
-- The label still mixes exam medication states.
+1. The formula-coordinate fidelity results.
+2. The component-calibrated PDN surrogate with its planted-mechanism validation.
+3. The clinically actionable finding that **tremor is the missing information**.
+
+---
+
+## 5. Code audit — 30 Sep 2026
+
+An independent review of all FCX code. Every item is fixed and covered by tests where testable.
+
+| # | Severity | Issue | Fix | Effect on claims |
+|---|---|---|---|---|
+| 1 | CRITICAL | C3 planted "PASS" counted near-chance boxes; column-argmax criterion | gate on AUROC / R², diagonal > 50% and weight > 0; added **synthetic** planted test | PASS → 1 PASS + 2 INCONCLUSIVE (trained); 3/3 synthetic |
+| 2 | MAJOR | C2 "verified 81–84%" was largely mechanical | shuffled-truth null + **real test** on augmented conformal models + always-tremor rule | per-patient blame no longer claimed as better than baseline |
+| 3 | MAJOR | C3 weights could be negative → "drift raises risk" read backwards | non-negative least squares | shares now interpretable |
+| 4 | MAJOR | narratives named a "main factor" at +0.00 logit | only name a factor above 0.10 logit | |
+| 5 | MAJOR | shifts computed over labelled rows spanned unlabelled visits (381 rows; sustained target wrong on ~7%) | `explain/trajectory.py`: all shifts over the full scheduled sequence | small numeric changes |
+| 6 | MAJOR | noise SD over-estimated ~22% (neighbour-average variance); τ counted noise twice | time-weighted interpolation with exact variance factor; out-of-fold τ with noise removed | |
+| 7 | MAJOR | baseline Shapley groups overlapped (D_LEDD in two groups); STATE_ON in the wrong group | disjoint groups, enforced by `shapley_mc` | |
+| 8 | MAJOR | Windows crash on non-ASCII output would lose all results | UTF-8 stdout; metrics written before examples | |
+| 9 | MAJOR | C2 baseline explained a different model (outer vs inner fold) | baseline now on the model that produced the sets | |
+| 10 | MAJOR | transition probabilities from class-balanced models shown as risks | transition black boxes trained unweighted | |
+| 11 | MAJOR | C1 "true blame" measured the explainer, included unfaithful rows | restricted to faithful rows, relabelled | |
+| 12 | MINOR | C2 examples drawn from straddles, not only real ambiguous sets | filter `set_size == 2` | |
+| 13 | MINOR | figure mixed backends; hard-coded captions; regex crashes | backend-suffixed outputs; captions from data; robust parsing | |
+| 14 | MINOR | argv IndexError, missing guards, docstring errors, unused variables | fixed | |
+| 15 | MINOR | fidelity calibration on in-sample black-box predictions; upstream stacking folds differ from g3 folds | **not fixed** — documented; measured fidelity is out-of-fold | |

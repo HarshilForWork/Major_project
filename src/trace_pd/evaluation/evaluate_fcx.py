@@ -28,7 +28,13 @@ from trace_pd.explain.implied_exam import ImpliedExamExplainer
 from trace_pd.explain.straddle import CutoffStraddleExplainer
 from trace_pd.explain.pdn import PDNExplainer, logit
 from trace_pd.models.backend import make_classifier, fit_classifier, backend_from_argv
+from trace_pd.explain import trajectory as TJ
 BACKEND = backend_from_argv(sys.argv)
+SFX = "_xgb" if BACKEND == "xgb" else ""
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")   # Windows consoles / redirected output
+except Exception:
+    pass
 
 PROC, MET, FIG, INT = (_ROOT / "data/processed", _ROOT / "reports/metrics",
                        _ROOT / "reports/figures", _ROOT / "data/interim")
@@ -52,8 +58,8 @@ log(f"features: {len(FEATS)} cheap | labelled visits: {lab.sum():,} | "
     f"formula zones reproduce stored labels: {zone_ok*100:.2f}%")
 log(f"black boxes: {'XGBoost' if BACKEND == 'xgb' else 'sklearn HistGradientBoosting'}  (explainer heads: sklearn HGB)")
 
-def fit_clf(X, y):
-    return fit_classifier(make_classifier(BACKEND, n_classes=len(np.unique(y))), X, y)
+def fit_clf(X, y, balanced=True):
+    return fit_classifier(make_classifier(BACKEND, n_classes=len(np.unique(y))), X, y, balanced=balanced)
 
 def channel_groups(Xtr, lT, lP):
     """Baseline grouping: a feature is 'tremor-ish' if it correlates more with true log T than log P."""
@@ -118,9 +124,36 @@ for fold, (tr, te) in enumerate(outer.split(X, y, G)):
     st.calibrate_fidelity(X[cal], ieei.implied(X[cal])[2], ieei.cut, amb_cal)
     pT, pP, pl = ieei.implied(X[te])
     o = st.explain(X[te], pl, ieei.cut, pT, pP, true_T=lT[te], true_P=lP[te])
+    # REAL test of the actionable claim: give the SAME kind of conformal predictor the true
+    # score of one channel (as if that part of the exam were done) and see whether ITS set
+    # collapses to a singleton. Independent of the explainer's own intervals.
+    def lac_sets(Xtr_, ytr_, Xcal_, ycal_, Xte_):
+        m_ = fit_clf(Xtr_, ytr_); pc_ = m_.predict_proba(Xcal_)
+        s_ = 1 - pc_[np.arange(len(ycal_)), ycal_]
+        q_ = np.sort(s_)[min(len(s_), int(np.ceil((len(s_) + 1) * 0.9))) - 1]
+        pt_ = m_.predict_proba(Xte_); ins_ = pt_ >= 1 - q_
+        ins_[ins_.sum(1) == 0, pt_[ins_.sum(1) == 0].argmax(1)] = True
+        return ins_.sum(1)
+    XT, XP = np.c_[X, lT], np.c_[X, lP]
+    size_T = lac_sets(XT[itr], y[itr], XT[cal], y[cal], XT[te])     # tremor exam done
+    size_P = lac_sets(XP[itr], y[itr], XP[cal], y[cal], XP[te])     # gait exam done
+    # null: the same test with the TRUE scores shuffled across patients -- how much of
+    # "revealing the blamed channel resolves it" happens whatever the true value is?
+    prm = np.random.default_rng(1000 + fold).permutation(len(te))
+    on = st.explain(X[te], pl, ieei.cut, pT, pP, true_T=lT[te][prm], true_P=lP[te][prm])
+    # baseline blame on the SAME model that produced the sets (g1i), for the explained rows
+    pos = {i: k for k, i in enumerate(te)}
+    tgi, ggi = channel_groups(X[itr], lT[itr], lP[itr])
+    g1i_logit = lambda Z, m=g1i: logit(m.predict_proba(Z)[:, 1])
+    phib_i, _ = shapley_mc(g1i_logit, X[ex], X[rng.choice(itr, size=N_BG, replace=False)], n_perm=N_PERM,
+                           groups=[tgi, ggi], rng=np.random.default_rng(200 + fold))
+    bi = {i: phib_i[k] for k, i in enumerate(ex)}
     for k, i in enumerate(te):
-        c2_rows.append(dict(i=i, fold=fold, set_size=int(inset[k].sum()), covered=bool(inset[k, y[i]]),
-                            kappa=st.kappa, **{kk: vv[k] for kk, vv in o.items()}))
+        row = dict(i=i, fold=fold, set_size=int(inset[k].sum()), covered=bool(inset[k, y[i]]),
+                   kappa=st.kappa, set_size_if_tremor=int(size_T[k]), set_size_if_gait=int(size_P[k]), null_res_T=bool(on["really_resolves_tremor"][k]),
+                   null_res_P=bool(on["really_resolves_gait"][k]), **{kk: vv[k] for kk, vv in o.items()})
+        if i in bi: row.update(base_trem_i=bi[i][0], base_gait_i=bi[i][1])
+        c2_rows.append(row)
     print(f"  fold {fold+1}/5 done", flush=True)
 
 c1 = pd.DataFrame(c1_rows); c2 = pd.DataFrame(c2_rows)
@@ -139,7 +172,7 @@ aT = np.abs(c1[[f"phiT_{c}" for c in FEATS]].to_numpy()).sum(1); aP = np.abs(c1[
 log(f"CHANNELS   share of attribution mass through the gait channel: {np.mean(aP/(aT+aP))*100:.1f}% "
     f"(tremor {np.mean(aT/(aT+aP))*100:.1f}%)")
 # error attribution: when the classifier is wrong, which channel is truly to blame?
-err = c1[c1.y != c1.g].copy()
+err = c1[(c1.y != c1.g) & (R["iee_dec"][c1.i] == c1.g)].copy()   # classifier wrong AND explainer faithful there
 eT = R["hT"][err.i] - lT[err.i]; eP = R["hP"][err.i] - lP[err.i]
 dirn = np.sign((R["hT"][err.i] - R["hP"][err.i]) - ell[err.i])          # direction the implied ratio is off
 true_blame = np.where(eT * dirn >= -eP * dirn, "tremor", "gait")          # channel contributing more to the error
@@ -150,7 +183,7 @@ acc = lambda a, t: balanced_accuracy_score(t, a)
 _c2w = pd.DataFrame(c2_rows).set_index("i")
 wt, wg = _c2w.loc[err.i, "hw_tremor"].to_numpy(), _c2w.loc[err.i, "hw_gait"].to_numpy()
 fcx_unc_blame = np.where(wt >= wg, "tremor", "gait")
-log(f"ERROR ATTRIBUTION on {len(err)} explained misclassifications -- which channel is really wrong?")
+log(f"ERROR ATTRIBUTION on {len(err)} misclassifications the explainer reproduces -- which of the EXPLAINER's channels is wrong?")
 log(f"           true blame: tremor {np.mean(true_blame=='tremor')*100:.0f}% / gait {np.mean(true_blame=='gait')*100:.0f}%")
 log(f"           FCX (uncertainty channel, C1+C2) balanced acc {acc(fcx_unc_blame, true_blame):.3f} | "
     f"FCX (attribution direction) {acc(fcx_blame, true_blame):.3f} | grouped Shapley on classifier {acc(base_blame, true_blame):.3f} | chance 0.500")
@@ -178,27 +211,45 @@ for ch, col in (("tremor", "really_resolves_tremor"), ("gait", "really_resolves_
         log(f"VERIFIED   blamed {ch:6s} (n={len(sub)}): revealing the TRUE {ch} score resolves it {sub[col].mean()*100:.0f}% "
             f"| revealing the other channel instead: {sub[other].mean()*100:.0f}%")
 log(f"           overall: revealing true tremor resolves {s.really_resolves_tremor.mean()*100:.0f}% of straddles, true gait {s.really_resolves_gait.mean()*100:.0f}%")
-j = c2.set_index("i").join(c1.set_index("i")[["base_trem", "base_gait"]], how="inner")
-j = j[j.straddle & j.blame.isin(["tremor", "gait"])]
+sb = s[s.blame.isin(["tremor", "gait"])]
+hit = np.where(sb.blame == "tremor", sb.really_resolves_tremor, sb.really_resolves_gait)
+nul = np.where(sb.blame == "tremor", sb.null_res_T, sb.null_res_P)
+log(f"NULL CHECK   blamed channel resolves it with the TRUE score {np.mean(hit)*100:.0f}% | with a SHUFFLED "
+    f"(wrong patient's) score {np.mean(nul)*100:.0f}%  -> real information beyond the mechanics: {(np.mean(hit)-np.mean(nul))*100:+.0f} pts")
+# ---- the real test: does measuring the blamed channel collapse the CONFORMAL SET itself?
+A2 = c2[(c2.set_size == 2) & c2.blame.isin(["tremor", "gait"])].copy()
+A2["res_T"] = A2.set_size_if_tremor == 1; A2["res_P"] = A2.set_size_if_gait == 1
+hitR = np.where(A2.blame == "tremor", A2.res_T, A2.res_P); othR = np.where(A2.blame == "tremor", A2.res_P, A2.res_T)
+log(f"REAL TEST    on {len(A2)} ambiguous sets with a single-channel blame: giving the conformal model the TRUE score of the")
+log(f"             blamed channel collapses the set {np.mean(hitR)*100:.0f}% | the OTHER channel {np.mean(othR)*100:.0f}% | "
+    f"random channel {np.mean((A2.res_T.astype(float)+A2.res_P.astype(float))/2)*100:.0f}%")
+log(f"             overall: tremor exam collapses {np.mean(c2.loc[c2.set_size==2,'set_size_if_tremor']==1)*100:.0f}% of ambiguous sets, "
+    f"gait exam {np.mean(c2.loc[c2.set_size==2,'set_size_if_gait']==1)*100:.0f}%")
+log(f"TRIVIAL RULE 'always examine tremor' on the same sets: {A2.res_T.mean()*100:.0f}%  "
+    f"(FCX per-patient blame {np.mean(hitR)*100:.0f}%)")
+gb = A2[A2.blame == "gait"]
+log(f"             when FCX blames GAIT (n={len(gb)}): gait exam collapses {gb.res_P.mean()*100:.0f}% | tremor exam {gb.res_T.mean()*100:.0f}%")
+jr = A2[A2.base_trem_i.notna()] if "base_trem_i" in A2 else A2.iloc[:0]
+if len(jr):
+    bbr = np.where(jr.base_trem_i.abs() >= jr.base_gait_i.abs(), "tremor", "gait")
+    f_r = np.where(jr.blame == "tremor", jr.res_T, jr.res_P); b_r = np.where(bbr == "tremor", jr.res_T, jr.res_P)
+    log(f"REAL vs BASELINE on {len(jr)} of those (same rows): FCX blame collapses the set {np.mean(f_r)*100:.0f}% | "
+        f"grouped Shapley blame {np.mean(b_r)*100:.0f}% | random {np.mean((jr.res_T.astype(float)+jr.res_P.astype(float))/2)*100:.0f}%")
+j = sb[sb.base_trem_i.notna()] if "base_trem_i" in sb else sb.iloc[:0]
 fcx_hit = np.where(j.blame == "tremor", j.really_resolves_tremor, j.really_resolves_gait)
-bb = np.where(j.base_trem.abs() >= j.base_gait.abs(), "tremor", "gait")
+fcx_nul = np.where(j.blame == "tremor", j.null_res_T, j.null_res_P)
+bb = np.where(j.base_trem_i.abs() >= j.base_gait_i.abs(), "tremor", "gait")
 base_hit = np.where(bb == "tremor", j.really_resolves_tremor, j.really_resolves_gait)
+base_nul = np.where(bb == "tremor", j.null_res_T, j.null_res_P)
 rnd_hit = (j.really_resolves_tremor.astype(float) + j.really_resolves_gait.astype(float)) / 2
-log(f"BLAME vs BASELINE on {len(j)} straddles (same rows): 'measuring the blamed channel really resolves it' -- "
-    f"FCX {np.mean(fcx_hit)*100:.0f}% | grouped Shapley on classifier {np.mean(base_hit)*100:.0f}% | random channel {rnd_hit.mean()*100:.0f}%")
+log(f"BLAME vs BASELINE on {len(j)} straddles (same rows, same model): blamed channel really resolves it -- "
+    f"FCX {np.mean(fcx_hit)*100:.0f}% (shuffled {np.mean(fcx_nul)*100:.0f}%) | grouped Shapley on the set's model "
+    f"{np.mean(base_hit)*100:.0f}% (shuffled {np.mean(base_nul)*100:.0f}%) | random channel {rnd_hit.mean()*100:.0f}%")
 
 # =========================================================================== C3
 log("\n" + "-" * 78); log("C3  PROXIMITY / DRIFT / NOISE explanation of the transition-risk model"); log("-" * 78)
-d3 = df[lab].copy().reset_index(drop=True)
-gp = d3.groupby("PATNO")
-d3["ell_prev"], d3["ell_next"] = gp.ell.shift(1), gp.ell.shift(-1)
-d3["eta"] = (d3.ell_prev + d3.ell_next) / 2                                  # leave-visit-out smoothing
-d3["noise_abs"] = (d3.ell - d3.eta).abs()
-d3["eta_next"] = gp.eta.shift(-1)
-d3["mu"] = d3.eta_next - d3.eta
-DCOLS = ["NP2RISE", "NP2TURN", "LEDD_TOTAL_MG", "MCATOT", "NP1RTOT", "NP1PTOT", "GDS_TOTAL", "SCOPA_AUT_TOTAL"]
-for c in DCOLS: d3["D_" + c] = d3[c] - gp[c].shift(1)
-d3["PRIOR_VISITS"] = gp.cumcount()
+d3 = TJ.build(df.drop(columns=["logT", "logP", "ell"]))      # shifts over the FULL scheduled sequence
+DCOLS = TJ.DELTA_COLS
 # out-of-fold 3-class subtype probabilities (leak-free version of the upstream features)
 X_all = d3[FEATS].to_numpy(float); y_all = d3.LABEL.map({"TD": 0, "PIGD": 1, "INDETERMINATE": 2}).to_numpy()
 oofp = np.zeros((len(d3), 3))
@@ -215,9 +266,11 @@ DRIFT = [F3.index("D_" + c) for c in DCOLS] + [F3.index("PRIOR_VISITS")]
 NOISEF = [F3.index(c) for c in ("LEDD_TOTAL_MG", "N_CONMEDS", "PDTRTMNT", "D_LEDD_TOTAL_MG")]
 LEVEL = [j for j in LEVEL if j not in NOISEF]; DRIFT = [j for j in DRIFT if j not in NOISEF]
 for fold, (tr, te) in enumerate(StratifiedGroupKFold(5, shuffle=True, random_state=SEED).split(X3, y3, G3)):
-    g3 = fit_clf(X3[tr], y3[tr])
+    g3 = fit_clf(X3[tr], y3[tr], balanced=False)       # probabilities are reported -> no reweighting
     g3p[te] = g3.predict_proba(X3[te])[:, 1]
-    pdn = PDNExplainer().fit(X3[tr], t3.eta.to_numpy()[tr], t3.mu.to_numpy()[tr], t3.noise_abs.to_numpy()[tr])
+    pdn = PDNExplainer().fit(X3[tr], t3.eta.to_numpy()[tr], t3.mu.to_numpy()[tr], t3.noise_abs.to_numpy()[tr],
+                             noise_factor=t3.NOISE_FACTOR.to_numpy()[tr],
+                             eta_noise_factor=t3.ETA_NOISE_FACTOR.to_numpy()[tr], groups=G3[tr])
     pdn.calibrate_fidelity(X3[tr], g3.predict_proba(X3[tr])[:, 1])
     fid[te] = pdn.predict_logit(X3[te])
     e = pdn.explain(X3[te]); W3.append(e["weights"])
@@ -238,7 +291,8 @@ log(f"FIDELITY   corr(logit g3, FCX surrogate) {np.corrcoef(zg, fid)[0,1]:.3f} |
 log("component weights b_P / b_D / b_N (mean over folds): " + " / ".join(f"{np.mean([w[c] for w in W3]):+.2f}" for c in "PDN"))
 aP_, aD_, aN_ = (t3.phi_P.abs().mean(), t3.phi_D.abs().mean(), t3.phi_N.abs().mean())
 tot = aP_ + aD_ + aN_
-log(f"WHAT DRIVES PREDICTED RISK (mean |phi| share):  proximity {aP_/tot*100:.0f}% | drift {aD_/tot*100:.0f}% | noise {aN_/tot*100:.0f}%")
+log(f"WHAT DRIVES PREDICTED RISK (mean |phi| share, surrogate R^2 {1 - np.var(zg-fid)/np.var(zg):.2f}):  "
+    f"proximity {aP_/tot*100:.0f}% | drift {aD_/tot*100:.0f}% | noise {aN_/tot*100:.0f}%")
 # ground-truth flip type from the smoothed TRUE trajectory
 fl = t3[(t3.LABEL_FLIPPED_NEXT == 1) & t3.eta.notna() & t3.eta_next.notna()].copy()
 fl["noise_flip"] = FM.zone(fl.eta) == FM.zone(fl.eta_next)
@@ -246,18 +300,19 @@ log(f"ground-truth flip types ({len(fl)} flips with smoothed trajectory): noise 
 au_f = roc_auc_score(fl.noise_flip, fl.phi_N + fl.phi_P - fl.phi_D)
 au_b = roc_auc_score(fl.noise_flip, fl.b_noise + fl.b_level - fl.b_drift)
 log(f"CORRECTNESS  AUROC for telling noise flips from drift flips:  FCX {au_f:.3f}  vs  grouped Shapley on g3 {au_b:.3f}  (chance 0.5)")
-nn = t3.groupby("PATNO").LABEL.shift(-2)
-t3["reverted"] = np.where(nn.notna(), nn == t3.LABEL, np.nan)
+t3["reverted"] = t3.REVERTED                              # scheduled t+2, from trajectory.build
 f2 = t3[(t3.LABEL_FLIPPED_NEXT == 1) & t3.reverted.notna()]
 nd = (f2.phi_N + f2.phi_P) > f2.phi_D
 log(f"OUTCOME    flips FCX calls noise/proximity-dominated revert at t+2: {f2[nd].reverted.mean()*100:.0f}% (n={nd.sum()}) "
     f"| drift-dominated: {f2[~nd].reverted.mean()*100:.0f}% (n={(~nd).sum()})")
 
 # =========================================================================== examples
+OUT = MET / f"fcx_results{SFX}.txt"
+OUT.write_text("\n".join(LOG) + "\n", encoding="utf-8")          # metrics are safe even if printing fails below
 log("\n" + "-" * 78); log("EXAMPLE EXPLANATIONS"); log("-" * 78)
 for _, r in c1.sample(3, random_state=1).iterrows():
     log("C1 · " + r.narrative)
-for _, r in c2[c2.straddle].sample(3, random_state=2).iterrows():
+for _, r in c2[c2.straddle & (c2.set_size == 2)].sample(3, random_state=2).iterrows():
     ch = r.blame
     log(f"C2 · Set {{TD, PIGD}}: the implied-ratio interval [{np.exp(r.ratio_lo):.2f}, {np.exp(r.ratio_hi):.2f}] straddles the cutoff. "
         f"Responsible channel: {ch} (tremor carries {r.tremor_share*100:.0f}% of the width). "
@@ -267,9 +322,8 @@ for i in t3[t3.phi_P.notna()].sample(3, random_state=3).index:
     r = t3.loc[i]; e1 = {k: np.array([r[k]]) for k in ("phi_P", "phi_D", "phi_N")}; e1["eta"] = np.array([r["eta_hat"]])
     log("C3 · " + pe(e1, 0, 1 / (1 + np.exp(-zg[i]))))
 
-OUT = MET / ("fcx_results_xgb.txt" if BACKEND == "xgb" else "fcx_results.txt")
 OUT.write_text("\n".join(LOG) + "\n", encoding="utf-8")
-c1.drop(columns=[c for c in c1 if c.startswith(("phiT_", "phiP_"))]).to_csv(INT / "fcx_c1.csv", index=False)
-c2.to_csv(INT / "fcx_c2.csv", index=False); t3.to_csv(INT / "fcx_c3.csv", index=False)
-imp.to_csv(INT / "fcx_c1_importance.csv")
+c1.drop(columns=[c for c in c1 if c.startswith(("phiT_", "phiP_"))]).to_csv(INT / f"fcx_c1{SFX}.csv", index=False)
+c2.to_csv(INT / f"fcx_c2{SFX}.csv", index=False); t3.to_csv(INT / f"fcx_c3{SFX}.csv", index=False)
+imp.to_csv(INT / f"fcx_c1_importance{SFX}.csv")
 print(f"\nwrote {OUT}")

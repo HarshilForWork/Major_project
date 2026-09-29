@@ -780,11 +780,13 @@ baseline. Full method and results: [`docs/fcx.md`](docs/fcx.md). Run with `make 
 
 ![FCX](reports/figures/fig_fcx_summary.png)
 
-| Component | Explains | Result |
-|---|---|---|
-| **C1 Implied exam** | subtype classifier | fidelity **89.6%**. The model's implied gait matches the truth (r 0.57); its **tremor doesn't (r 0.25): it's nearly blind to tremor**. LEDD drives the tremor channel, i.e. the model learned that medication suppresses tremor. |
-| **C2 Cutoff straddle** | conformal sets | reproduces set ambiguity (κ **0.61**). "Which part of the exam would settle it" is **verified right 81%** of the time, vs 68% for a SHAP-style baseline and 73% random |
-| **C3 Proximity–drift–noise** | transition risk | only **8%** of predicted risk is real drift. Built leak-free, the transition model is near chance (AUROC 0.53) |
+| Component | Explains | Validated result | What did not hold |
+|---|---|---|---|
+| **C1 Implied exam** | subtype classifier | fidelity **89.6%**; exact tremor/gait channel split. Tremor information from cheap features is weak (implied vs true r 0.25; gait 0.57). LEDD drives the tremor channel — the model learned that medication hides tremor | per-case error attribution (chance for every method) |
+| **C2 Cutoff straddle** | conformal sets | explains set ambiguity faithfully (κ **0.61**). **A tremor exam collapses 95% of ambiguous sets**, a gait exam 53% | per-patient "which exam part" blame (90%) loses to the rule "always examine tremor" (94%) |
+| **C3 Proximity–drift–noise** | transition risk | faithful on a model with signal (exam-informed, AUROC 0.77, R² **0.62**); recovers planted mechanisms 3/3; risk is **~85% proximity** to a cutoff, drift ~3–6% | noise-vs-drift flip identification no better than grouped Shapley (0.64 vs 0.66) |
+
+A code audit on 30 Sep found and fixed 15 issues; three changed claims — see `docs/fcx.md` §5.
 
 ### 10.2 Design documents
 

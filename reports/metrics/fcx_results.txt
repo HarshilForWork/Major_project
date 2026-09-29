@@ -2,7 +2,7 @@
 FCX -- FORMULA-COORDINATE EXPLANATIONS  |  evaluation on PPMI
 ==============================================================================
 features: 26 cheap | labelled visits: 5,638 | formula zones reproduce stored labels: 100.00%
-black boxes: sklearn HistGradientBoosting (model-agnostic; swap in XGBoost unchanged)
+black boxes: sklearn HistGradientBoosting  (explainer heads: sklearn HGB)
 
 ------------------------------------------------------------------------------
 C1  IMPLIED-EXAM EXPLANATION of the subtype classifier (TD vs PIGD)
@@ -10,21 +10,21 @@ C1  IMPLIED-EXAM EXPLANATION of the subtype classifier (TD vs PIGD)
 FIDELITY   implied-exam decision agrees with the classifier: 89.6%   | Spearman(P(PIGD), -implied ratio): 0.923
            balanced acc vs truth -- classifier 0.686 | implied exam 0.688
 ALIGNMENT  corr(implied, true):  log T 0.253 | log P 0.571 | ratio 0.460
-CHANNELS   share of attribution mass through the gait channel: 47.0% (tremor 53.0%)
-ERROR ATTRIBUTION on 203 explained misclassifications -- which channel is really wrong?
-           true blame: tremor 72% / gait 28%
-           FCX (uncertainty channel, C1+C2) balanced acc 0.491 | FCX (attribution direction) 0.521 | grouped Shapley on classifier 0.453 | chance 0.500
-STABILITY  rank corr of attributions across background/seed:  FCX 0.879  vs  Shapley-on-classifier 0.880
+CHANNELS   share of attribution mass through the gait channel: 47.3% (tremor 52.7%)
+ERROR ATTRIBUTION on 158 misclassifications the explainer reproduces -- which of the EXPLAINER's channels is wrong?
+           true blame: tremor 76% / gait 24%
+           FCX (uncertainty channel, C1+C2) balanced acc 0.473 | FCX (attribution direction) 0.534 | grouped Shapley on classifier 0.468 | chance 0.500
+STABILITY  rank corr of attributions across background/seed:  FCX 0.879  vs  Shapley-on-classifier 0.886
 top features by channel (mean |attribution|, log-units):
                          tremor    gait   total
-NP2RISE                  0.0461  0.2223  0.2683
-LEDD_TOTAL_MG            0.1580  0.1014  0.2594
-SEX                      0.1381  0.0389  0.1770
-YRS_SINCE_SYMPTOM_ONSET  0.0769  0.0775  0.1544
-AGE_AT_VISIT             0.0886  0.0640  0.1527
-YRS_SINCE_DIAGNOSIS      0.0634  0.0865  0.1499
-NP2HOBB                  0.0291  0.0892  0.1183
-NP2DRES                  0.0240  0.0937  0.1178
+NP2RISE                  0.0453  0.2186  0.2639
+LEDD_TOTAL_MG            0.1566  0.1057  0.2623
+SEX                      0.1394  0.0376  0.1770
+YRS_SINCE_DIAGNOSIS      0.0619  0.0895  0.1514
+YRS_SINCE_SYMPTOM_ONSET  0.0748  0.0752  0.1501
+AGE_AT_VISIT             0.0835  0.0611  0.1446
+NP2DRES                  0.0233  0.0947  0.1179
+NP2HOBB                  0.0275  0.0901  0.1176
 
 ------------------------------------------------------------------------------
 C2  CUTOFF-STRADDLE EXPLANATION of the conformal sets
@@ -36,27 +36,35 @@ BLAME      among straddles: both 51%, tremor 38%, gait 11%
 VERIFIED   blamed tremor (n=1064): revealing the TRUE tremor score resolves it 83% | revealing the other channel instead: 59%
 VERIFIED   blamed gait   (n=308): revealing the TRUE gait score resolves it 78% | revealing the other channel instead: 71%
            overall: revealing true tremor resolves 80% of straddles, true gait 59%
-BLAME vs BASELINE on 149 straddles (same rows): 'measuring the blamed channel really resolves it' -- FCX 81% | grouped Shapley on classifier 68% | random channel 73%
+NULL CHECK   blamed channel resolves it with the TRUE score 82% | with a SHUFFLED (wrong patient's) score 77%  -> real information beyond the mechanics: +5 pts
+REAL TEST    on 976 ambiguous sets with a single-channel blame: giving the conformal model the TRUE score of the
+             blamed channel collapses the set 90% | the OTHER channel 59% | random channel 74%
+             overall: tremor exam collapses 95% of ambiguous sets, gait exam 53%
+TRIVIAL RULE 'always examine tremor' on the same sets: 94%  (FCX per-patient blame 90%)
+             when FCX blames GAIT (n=160): gait exam collapses 61% | tremor exam 91%
+REAL vs BASELINE on 117 of those (same rows): FCX blame collapses the set 90% | grouped Shapley blame 68% | random 76%
+BLAME vs BASELINE on 174 straddles (same rows, same model): blamed channel really resolves it -- FCX 83% (shuffled 78%) | grouped Shapley on the set's model 66% (shuffled 67%) | random channel 72%
 
 ------------------------------------------------------------------------------
 C3  PROXIMITY / DRIFT / NOISE explanation of the transition-risk model
 ------------------------------------------------------------------------------
-black-box transition model: AUROC 0.527 (base flip rate 28.7%)
-FIDELITY   corr(logit g3, FCX surrogate) 0.373 | R^2 0.137 | surrogate AUROC 0.540
-WHAT DRIVES PREDICTED RISK (mean |phi| share):  proximity 56% | drift 8% | noise 36%
-ground-truth flip types (1184 flips with smoothed trajectory): noise flips 47% | drift flips 53%
-CORRECTNESS  AUROC for telling noise flips from drift flips:  FCX 0.502  vs  grouped Shapley on g3 0.494  (chance 0.5)
-OUTCOME    flips FCX calls noise/proximity-dominated revert at t+2: 36% (n=340) | drift-dominated: 36% (n=778)
+black-box transition model: AUROC 0.520 (base flip rate 28.7%)
+FIDELITY   corr(logit g3, FCX surrogate) 0.422 | R^2 0.175 | surrogate AUROC 0.547
+component weights b_P / b_D / b_N (mean over folds): +1.01 / +0.20 / +0.35
+WHAT DRIVES PREDICTED RISK (mean |phi| share, surrogate R^2 0.18):  proximity 75% | drift 2% | noise 22%
+ground-truth flip types (1059 flips with smoothed trajectory): noise flips 48% | drift flips 52%
+CORRECTNESS  AUROC for telling noise flips from drift flips:  FCX 0.516  vs  grouped Shapley on g3 0.508  (chance 0.5)
+OUTCOME    flips FCX calls noise/proximity-dominated revert at t+2: 36% (n=349) | drift-dominated: 36% (n=854)
 
 ------------------------------------------------------------------------------
 EXAMPLE EXPLANATIONS
 ------------------------------------------------------------------------------
-C1 · Predicted TD. The model behaves as if tremor ≈ 0.49 and gait ≈ 0.19 (implied ratio 2.36; decision cutoff 1.02; margin 0.84 log-units). Main drivers: NP2RISE (via the gait channel, 17% of the total attribution); NP2DRES (via the gait channel, 13% of the total attribution); HANDED (via the gait channel, 6% of the total attribution).
-C1 · Predicted PIGD. The model behaves as if tremor ≈ 0.11 and gait ≈ 1.05 (implied ratio 0.13; decision cutoff 1.02; margin 2.05 log-units). Main drivers: LEDD_TOTAL_MG (via the tremor channel, 18% of the total attribution); NP2TURN (via the tremor channel, 12% of the total attribution); NP2RISE (via the gait channel, 11% of the total attribution).
-C1 · Predicted TD. The model behaves as if tremor ≈ 0.45 and gait ≈ 0.35 (implied ratio 1.25; decision cutoff 1.03; margin 0.20 log-units). Main drivers: NP2RISE (via the gait channel, 10% of the total attribution); HANDED (via the gait channel, 7% of the total attribution); SEX (via the tremor channel, 7% of the total attribution).
-C2 · Set {TD, PIGD}: the implied-ratio interval [0.81, 3.18] straddles the cutoff. Responsible channel: tremor (tremor carries 53% of the width). Examining tremor would settle it.
-C2 · Set {TD, PIGD}: the implied-ratio interval [0.93, 4.17] straddles the cutoff. Responsible channel: tremor (tremor carries 55% of the width). Examining tremor would settle it.
-C2 · Set {TD, PIGD}: the implied-ratio interval [0.24, 1.21] straddles the cutoff. Responsible channel: gait (tremor carries 48% of the width). Examining gait would settle it.
-C3 · Transition risk 41%. Main factor raising it: expected real drift. Contributions (logit, vs cohort reference): proximity to a subtype cutoff -0.24; expected real drift +0.05; visit-to-visit measurement noise -0.04. Underlying ratio is 0.88 log-units from the nearest cutoff. Suggested action: follow up: the change looks progressive.
-C3 · Transition risk 45%. Main factor raising it: expected real drift. Contributions (logit, vs cohort reference): proximity to a subtype cutoff +0.01; expected real drift +0.01; visit-to-visit measurement noise -0.12. Underlying ratio is 0.17 log-units from the nearest cutoff. Suggested action: follow up: the change looks progressive.
-C3 · Transition risk 47%. Main factor raising it: visit-to-visit measurement noise. Contributions (logit, vs cohort reference): proximity to a subtype cutoff +0.00; expected real drift +0.02; visit-to-visit measurement noise +0.04. Underlying ratio is 0.01 log-units from the nearest cutoff. Suggested action: re-examine (ideally OFF medication) before re-subtyping.
+C1 · Predicted TD. The model behaves as if tremor ~ 0.33 and gait ~ 0.23 (implied ratio 1.47; model-calibrated cutoff 1.02 on the smoothed ratio; margin 0.32 log-units). Main drivers: SEX (via the tremor channel, 22% of the total attribution); NP2SPCH (via the tremor channel, 9% of the total attribution); NP2TURN (via the tremor channel, 5% of the total attribution).
+C1 · Predicted PIGD. The model behaves as if tremor ~ 0.36 and gait ~ 0.50 (implied ratio 0.72; model-calibrated cutoff 1.02 on the smoothed ratio; margin 0.34 log-units). Main drivers: NP2RISE (via the gait channel, 18% of the total attribution); AGE_AT_VISIT (via the gait channel, 11% of the total attribution); NP2SPCH (via the tremor channel, 8% of the total attribution).
+C1 · Predicted PIGD. The model behaves as if tremor ~ 0.47 and gait ~ 0.90 (implied ratio 0.53; model-calibrated cutoff 1.03 on the smoothed ratio; margin 0.64 log-units). Main drivers: NP2RISE (via the gait channel, 13% of the total attribution); YRS_SINCE_DIAGNOSIS (via the gait channel, 11% of the total attribution); AGE_AT_VISIT (via the gait channel, 8% of the total attribution).
+C2 · Set {TD, PIGD}: the implied-ratio interval [0.88, 2.51] straddles the cutoff. Responsible channel: tremor (tremor carries 55% of the width). Examining tremor would settle it.
+C2 · Set {TD, PIGD}: the implied-ratio interval [0.45, 1.87] straddles the cutoff. Responsible channel: both (tremor carries 50% of the width). Neither channel alone settles it.
+C2 · Set {TD, PIGD}: the implied-ratio interval [0.88, 4.40] straddles the cutoff. Responsible channel: tremor (tremor carries 54% of the width). Examining tremor would settle it.
+C3 · Transition risk 22%. Every component is below the cohort reference (proximity to a subtype cutoff -0.34; expected real drift +0.01; visit-to-visit measurement noise -0.03); the underlying ratio is 0.98 log-units from the nearest cutoff. Suggested action: routine follow-up.
+C3 · Transition risk 27%. Every component is below the cohort reference (proximity to a subtype cutoff -0.03; expected real drift +0.00; visit-to-visit measurement noise -0.03); the underlying ratio is 0.33 log-units from the nearest cutoff. Suggested action: routine follow-up.
+C3 · Transition risk 37%. Every component is below the cohort reference (proximity to a subtype cutoff -0.01; expected real drift +0.00; visit-to-visit measurement noise +0.04); the underlying ratio is 0.25 log-units from the nearest cutoff. Suggested action: routine follow-up.

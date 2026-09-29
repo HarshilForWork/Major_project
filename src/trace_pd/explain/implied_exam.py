@@ -65,7 +65,6 @@ class ImpliedExamExplainer:
         """Per-feature attributions to the tremor channel, gait channel and ratio.
         All three are exactly additive:  sum_j phi_T = h_T(x) - E h_T,  etc."""
         X, B = np.asarray(X, float), np.asarray(background, float)
-        rng = np.random.default_rng(seed)
         phiT, baseT = shapley_mc(self.hT.predict, X, B, n_perm, rng=np.random.default_rng(seed))
         phiP, baseP = shapley_mc(self.hP.predict, X, B, n_perm, rng=np.random.default_rng(seed))
         lT, lP, l = self.implied(X)
@@ -86,6 +85,9 @@ class ImpliedExamExplainer:
             ch = "gait" if abs(e["phi_gait"][i, j]) >= abs(e["phi_tremor"][i, j]) else "tremor"
             share = abs(phi[j]) / max(np.abs(phi).sum(), 1e-9) * 100
             drivers.append(f"{self.features[j]} (via the {ch} channel, {share:.0f}% of the total attribution)")
-        return (f"Predicted {side}. The model behaves as if tremor ≈ {max(T,0):.2f} and gait ≈ {max(P,0):.2f} "
-                f"(implied ratio {np.exp(l):.2f}; decision cutoff {np.exp(self.cut):.2f}; margin {abs(m):.2f} log-units). "
+        T, P = max(T, 0.0), max(P, 0.0)
+        ratio = f"{T / P:.2f}" if P > 0 else "undefined (gait 0)"
+        return (f"Predicted {side}. The model behaves as if tremor ~ {T:.2f} and gait ~ {P:.2f} "
+                f"(implied ratio {ratio}; model-calibrated cutoff {np.exp(self.cut):.2f} on the smoothed ratio; "
+                f"margin {abs(m):.2f} log-units). "
                 f"Main drivers: " + "; ".join(drivers) + ".")

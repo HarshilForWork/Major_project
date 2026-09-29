@@ -24,6 +24,9 @@ def shapley_mc(f, X, B, n_perm=32, groups=None, rng=None):
     X, B = np.asarray(X, float), np.asarray(B, float)
     n, d = X.shape
     players = [[j] for j in range(d)] if groups is None else [list(g) for g in groups]
+    flat = [j for g in players for j in g]
+    if len(flat) != len(set(flat)):
+        raise ValueError("shapley_mc: groups overlap -- each column must belong to exactly one player")
     p = len(players)
     phi = np.zeros((n, p)); base = np.zeros(n)
     for k in range(n_perm):

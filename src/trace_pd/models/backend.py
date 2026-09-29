@@ -33,9 +33,14 @@ def make_classifier(backend="hgb", n_classes=2):
     return HistGradientBoostingClassifier(max_depth=3, max_iter=200, learning_rate=0.06, random_state=42)
 
 
-def fit_classifier(model, X, y):
+def fit_classifier(model, X, y, balanced=True):
+    """balanced=True for classification metrics; balanced=False when the predicted
+    PROBABILITIES are reported to a user (balanced weights push them toward 0.5)."""
     y = np.asarray(y).astype(int)
-    model.fit(X, y, sample_weight=compute_sample_weight("balanced", y))
+    if balanced:
+        model.fit(X, y, sample_weight=compute_sample_weight("balanced", y))
+    else:
+        model.fit(X, y)
     return model
 
 
@@ -43,7 +48,10 @@ def backend_from_argv(argv):
     """--backend xgb|hgb (default: xgb if installed, else hgb)."""
     b = None
     if "--backend" in argv:
-        b = argv[argv.index("--backend") + 1]
+        i = argv.index("--backend")
+        if i + 1 >= len(argv):
+            raise SystemExit("usage: --backend xgb|hgb")
+        b = argv[i + 1]
     avail = available_backends()
     if b is None:
         b = avail[0]

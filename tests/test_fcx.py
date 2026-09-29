@@ -78,3 +78,41 @@ def test_straddle_logic():
     l = np.array([0.2, 0.2, 0.1]); cut = 0.0
     o = st.explain(np.zeros((3, 1)), l, cut, point_T=l, point_P=np.zeros(3))
     assert list(o["blame"]) == ["tremor", "gait", "both"]
+
+
+def test_shapley_groups_must_be_disjoint():
+    f = lambda Z: Z.sum(1)
+    X, B = np.ones((2, 3)), np.zeros((5, 3))
+    with pytest.raises(ValueError):
+        shapley_mc(f, X, B, n_perm=2, groups=[[0, 1], [1, 2]])
+
+
+def test_implied_exam_channels_are_exactly_additive():
+    from trace_pd.explain.implied_exam import ImpliedExamExplainer
+    rng = np.random.default_rng(4)
+    X = rng.normal(size=(400, 4)); lT = X[:, 0] - 1; lP = 0.5 * X[:, 1] - 1
+    iee = ImpliedExamExplainer(["a", "b", "c", "d"]).fit(X, lT, lP)
+    e = iee.explain(X[:10], X[100:160], n_perm=8)
+    assert np.allclose(e["phi_ratio"], e["phi_tremor"] - e["phi_gait"])
+    assert np.allclose(e["phi_ratio"].sum(1), e["log_ratio"] - (e["base_tremor"] - e["base_gait"]))
+
+
+def test_pdn_weights_are_non_negative():
+    rng = np.random.default_rng(5)
+    X = rng.normal(size=(500, 5))
+    p = PDNExplainer().fit(X, X[:, 0] * 0.5, X[:, 1] * 0.2, np.abs(X[:, 2]) * 0.3 + 0.05)
+    p.calibrate_fidelity(X, 1 / (1 + np.exp(-(0.2 - 0.8 * X[:, 1]))))     # arbitrary box
+    assert min(p.b.values()) >= 0
+
+
+def test_trajectory_never_spans_an_unlabelled_visit():
+    from trace_pd.explain import trajectory as TJ
+    df = pd.DataFrame(dict(PATNO=[1] * 4, VISIT_MONTH=[0, 3, 6, 9],
+                           LABEL=["TD", None, "TD", "PIGD"], NEXT_LABEL=[None, "TD", "PIGD", None],
+                           LABEL_FLIPPED_NEXT=[np.nan, np.nan, 1.0, np.nan],
+                           TREMOR_SCORE=[1.0, np.nan, 1.0, 0.2], PIGD_SCORE=[0.2, np.nan, 0.4, 1.0],
+                           PDSTATE_USED=["OFF"] * 4, **{c: [1.0, 2.0, 3.0, 4.0] for c in TJ.DELTA_COLS}))
+    d = TJ.build(df)
+    row6 = d[d.VISIT_MONTH == 6].iloc[0]
+    assert np.isnan(row6.eta)                    # previous scheduled visit (month 3) is unlabelled
+    assert row6.D_NP2RISE == 1.0                 # delta vs the adjacent scheduled visit, not month 0
