@@ -175,6 +175,40 @@ The strongest publishable pieces:
 
 ---
 
+## 3b. Novelty — adversarial search, 30 Sep 2026 (post-audit)
+
+About 25 targeted searches, including 2025–2026 preprints. Every paper listed was opened.
+
+| Component | Verdict | Closest prior art — and how FCX differs |
+|---|---|---|
+| **C1** implied exam | **incremental** | Post-hoc CBM (Yuksekgonul, ICLR 2023) and Laguna et al., *Beyond CBMs: How to Make Black Boxes Intervenable?* (NeurIPS 2024, [2401.13544](https://arxiv.org/abs/2401.13544)) put post-hoc concept probes on a black box, but with a **learned** concept-to-label map. TRACE glioblastoma ([2606.30313](https://arxiv.org/abs/2606.30313)) has deterministic clinical nodes, but is a trained model, not post-hoc. New here: a **fixed published formula** as the head, a black-box-matched cutoff, and the exact tremor/gait split |
+| **C2** cutoff straddle | **novel (narrow)** | COCOCO ([2605.18202](https://arxiv.org/abs/2605.18202)) and compositional conformal ([2405.15912](https://arxiv.org/abs/2405.15912)) **build** sets under known logic. ConformaDecompose ([2604.27149](https://arxiv.org/abs/2604.27149)) explains interval width via calibration localisation, for regression only. None explains an **external** conformal set as a concept interval straddling a known cutoff, and none validates the blame by **retraining with the true concept added**. That check is the strongest single contribution |
+| **C3** proximity / drift / noise | **novel as an explainer** | Threshold regression (Lee & Whitmore) and DeepFHT ([2510.00733](https://arxiv.org/abs/2510.00733)) parameterise first-passage into initial state / drift / diffusion, but as **predictors**. Nothing found uses a zone-crossing surrogate with exact 3-player Shapley and non-negative component weights fitted to a black box. Risk: a reviewer may call it a mechanistic surrogate with R² 0.61. Frame it as a *partial* explanation, and lead with the planted-mechanism recovery |
+| **Combination** | **novel** | No work — general or in Parkinson's — explains a classifier, its conformal set and its transition risk in one fixed clinical formula's coordinates, with every explanation checked against true concept values. The IJCAI 2026 CBM survey mentions no conformal work, no clinical-score heads and no fixed rules |
+
+**Defensible claim:**
+
+> FCX is, to our knowledge, the first framework that explains unmodified black-box classifiers,
+> their conformal prediction sets and their transition-risk models in the coordinates of a fixed
+> published clinical scoring formula. Each explanation is reported separately for fidelity to the
+> black box and for agreement with ground-truth concept values. It includes interventional
+> checks that the blamed concept actually resolves the set's ambiguity.
+
+**Confidence:** ~70% for C2, C3 and the combination; high that C1 alone is incremental.
+**Blind spots:** closed venues (JAMIA, CHIL, ML4H proceedings), and two preprints that couldn't be
+opened (arXiv 2608.18936, 2608.25581). Check these before submission.
+
+**Must cite and differentiate from:**
+
+1. **TRACE** — glioblastoma CBM, 2606.30313
+2. **COCOCO** — 2605.18202, together with compositional conformal 2405.15912
+3. **DeepFHT** — 2510.00733, together with Lee & Whitmore threshold regression
+
+Also cite: Laguna et al. 2024 alongside Post-hoc CBM, ConformaDecompose, and the PD subtype
+instability literature (Simuni 2016, Ren 2021, Kohat 2021) as motivation for C3.
+
+---
+
 ## 4. Same framework, two black boxes — XGBoost vs sklearn (post-audit)
 
 FCX only uses a model's predictions, so its results should be close for any comparable black
