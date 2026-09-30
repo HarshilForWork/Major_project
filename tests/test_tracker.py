@@ -1,4 +1,5 @@
 """Unit tests for PatientHistoryTracker."""
+import math
 import tempfile
 from pathlib import Path
 from trace_pd.tracking.tracker import PatientHistoryTracker, VisitRecord
@@ -63,3 +64,31 @@ def test_tracker_stability_and_deltas():
         loaded = PatientHistoryTracker.from_json(json_file)
         assert len(loaded.get_history("PAT_001")) == 3
         assert loaded.compute_stability_index("PAT_001") == 0.5
+
+
+def test_first_visit_deltas_are_nan():
+    """First-visit deltas must be NaN (not 0.0), matching training behavior
+    where ``groupby().shift()`` produces NaN. XGBoost treats NaN and 0.0
+    differently (routes to a different leaf), so mismatching is a
+    train/serve skew bug."""
+    tracker = PatientHistoryTracker()
+    feats = {"NP2RISE": 1.0, "LEDD_TOTAL_MG": 100.0}
+    deltas = tracker.compute_feature_deltas("NEW_PAT", feats)
+    for k, v in deltas.items():
+        assert math.isnan(v), f"First-visit delta for {k} should be NaN, got {v}"
+
+
+def test_missing_previous_feature_delta_is_nan():
+    """If the previous visit is missing a feature value, the delta should be NaN."""
+    tracker = PatientHistoryTracker()
+    rec = VisitRecord(
+        visit_id="BL", visit_month=0,
+        features={"NP2RISE": 1.0},  # LEDD is absent
+        probabilities={"TD": 0.5, "PIGD": 0.4, "INDETERMINATE": 0.1},
+        predicted_label="TD", conformal_set=["TD"],
+    )
+    tracker.add_visit("PAT_002", rec)
+    deltas = tracker.compute_feature_deltas("PAT_002", {"NP2RISE": 2.0, "LEDD_TOTAL_MG": 100.0})
+    assert deltas["NP2RISE"] == 1.0
+    assert math.isnan(deltas["LEDD_TOTAL_MG"]), "Missing previous value should give NaN"
+

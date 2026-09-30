@@ -6,33 +6,33 @@ Evaluation: 5-Fold StratifiedGroupKFold by PATNO
 
 --- TASK 1: BINARY (TD vs PIGD) - 5,020 rows, 439 patients ---
 LAC Method:
-  Empirical OOF Coverage: 89.80%
-  Mean Set Size:          1.54 classes
-  Singleton Sets (Size 1):46.4%
-  Dual-Label Sets (Size 2):53.6%
-  Calibrated Threshold:   q_hat = 0.7288
+  Empirical OOF Coverage: 89.44%
+  Mean Set Size:          1.53 classes
+  Singleton Sets (Size 1):47.4%
+  Dual-Label Sets (Size 2):52.6%
+  Calibrated Threshold:   q_hat = 0.7263
 
 APS Method:
-  Empirical OOF Coverage: 89.36%
-  Mean Set Size:          1.60 classes
-  Singleton Sets (Size 1):39.6%
-  Dual-Label Sets (Size 2):60.4%
-  Calibrated Threshold:   q_hat = 0.9155
+  Empirical OOF Coverage: 89.42%
+  Mean Set Size:          1.61 classes
+  Singleton Sets (Size 1):39.3%
+  Dual-Label Sets (Size 2):60.7%
+  Calibrated Threshold:   q_hat = 0.9158
 
 --- TASK 2: 3-CLASS (TD vs PIGD vs INDETERMINATE) - 5,638 rows, 439 patients ---
 LAC Method:
-  Empirical OOF Coverage: 89.87%
-  Mean Set Size:          2.40 classes
-  Size 1 (Singleton):     10.4%
-  Size 2 (Dual label):    38.8%
-  Size 3 (Uncertain):     50.8%
-  Calibrated Threshold:   q_hat = 0.8249
+  Empirical OOF Coverage: 89.89%
+  Mean Set Size:          2.39 classes
+  Size 1 (Singleton):     10.6%
+  Size 2 (Dual label):    39.4%
+  Size 3 (Uncertain):     50.0%
+  Calibrated Threshold:   q_hat = 0.8242
 
 APS Method:
-  Empirical OOF Coverage: 90.23%
-  Mean Set Size:          2.49 classes
-  Size 1 (Singleton):     1.9%
-  Size 2 (Dual label):    47.2%
-  Size 3 (Uncertain):     50.9%
-  Calibrated Threshold:   q_hat = 0.9293
+  Empirical OOF Coverage: 90.01%
+  Mean Set Size:          2.48 classes
+  Size 1 (Singleton):     2.1%
+  Size 2 (Dual label):    48.1%
+  Size 3 (Uncertain):     49.8%
+  Calibrated Threshold:   q_hat = 0.9269
 ==========================================================================

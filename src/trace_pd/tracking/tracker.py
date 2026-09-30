@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field, asdict
 from typing import Dict, List, Optional, Any
 import json
+import math
 from pathlib import Path
 
 
@@ -47,10 +48,17 @@ class PatientHistoryTracker:
         return None
 
     def compute_feature_deltas(self, patient_id: str, current_features: Dict[str, float]) -> Dict[str, float]:
-        """Compute delta X = X_t - X_{t-1} against the preceding visit."""
+        """Compute delta X = X_t - X_{t-1} against the preceding visit.
+
+        Returns NaN (not 0.0) when there is no previous visit or no previous
+        value for a feature. This matches training, where ``groupby().shift()``
+        produces NaN for first visits, and XGBoost routes NaN to a learned
+        default branch — treating first-visit deltas as 0.0 would be a
+        train/serve skew.
+        """
         history = self.get_history(patient_id)
         if not history:
-            return {k: 0.0 for k in current_features}
+            return {k: float('nan') for k in current_features}
             
         last_rec = history[-1]
         deltas = {}
@@ -59,7 +67,7 @@ class PatientHistoryTracker:
             if prev_v is not None and v is not None:
                 deltas[k] = float(v) - float(prev_v)
             else:
-                deltas[k] = 0.0
+                deltas[k] = float('nan')
         return deltas
 
     def compute_stability_index(self, patient_id: str) -> float:

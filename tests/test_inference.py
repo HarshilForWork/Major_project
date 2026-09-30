@@ -2,12 +2,23 @@
 import tempfile
 from pathlib import Path
 import pandas as pd
+import pytest
 from trace_pd import config
-from trace_pd.inference import TRACEPDInferencePipeline
 
 
 def test_end_to_end_inference():
-    """Verify that the end-to-end pipeline processes a visit and outputs verified reports."""
+    """Verify that the end-to-end pipeline processes a visit and outputs verified reports.
+
+    Skips (rather than fails) on a fresh clone where the production model
+    pickles (``models/*.pkl``) are git-ignored and haven't been trained yet.
+    """
+    conformal_path = config.MODELS / "conformal_model_production.pkl"
+    transition_path = config.MODELS / "transition_model_production.pkl"
+    if not conformal_path.exists() or not transition_path.exists():
+        pytest.skip("Production model artifacts not found — run `make conformal transition` first")
+
+    from trace_pd.inference import TRACEPDInferencePipeline
+
     df = pd.read_csv(config.LONG_TABLE, low_memory=False)
     sample_row = df.iloc[0].to_dict()
     

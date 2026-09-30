@@ -109,7 +109,7 @@ class TRACEPDInferencePipeline:
         ]
         trans_input_dict = {k: features.get(k, np.nan) for k in self.cheap_features}
         for c in delta_cols:
-            trans_input_dict[f"DELTA_{c}"] = deltas.get(c, 0.0)
+            trans_input_dict[f"DELTA_{c}"] = deltas.get(c, np.nan)
             
         trans_input_dict["PRIOR_VISITS_COUNT"] = len(history)
         trans_input_dict["PROB_TD"] = prob_dict["TD"]

@@ -5,8 +5,12 @@ longitudinal trajectory, and transition risk) into structured payloads and verif
 plain-language clinical summaries.
 """
 from typing import Dict, List, Any, Optional
+import math
+import pickle
 import re
 from dataclasses import dataclass
+
+from trace_pd import config
 
 
 FEATURE_DESCRIPTIONS = {
@@ -28,9 +32,68 @@ FEATURE_DESCRIPTIONS = {
     "NP2HOBB": "hobbies/activities",
 }
 
+# ---- Per-feature direction semantics ----
+# "higher_is_worse" : positive delta means clinical worsening
+# "higher_is_better": positive delta means clinical improvement
+# "neutral"         : direction is neither good nor bad (say "increased" / "decreased")
+
+_HIGHER_IS_BETTER = {"MCATOT"}  # MoCA: higher cognitive score = better
+
+_NEUTRAL_FEATURES = {
+    "LEDD_TOTAL_MG",            # medication dose — neutral
+    "N_CONMEDS",                # number of concomitant medications
+    "YRS_SINCE_SYMPTOM_ONSET",  # passage of time
+    "YRS_SINCE_DIAGNOSIS",      # passage of time
+    "HANDED",                   # handedness — never changes
+    "ENROLL_AGE",               # age at enrollment — constant
+    "GENDER",                   # constant
+}
+
+# Approximate cohort SDs used to normalise delta magnitudes so that a 100 mg
+# LEDD change doesn't always outrank a 1-point MDS-UPDRS Part II item.
+# Computed from the pooled standard deviations across the PPMI cohort.
+_COHORT_SD = {
+    "NP2RISE": 0.8,   "NP2TURN": 0.8,   "LEDD_TOTAL_MG": 250.0,
+    "MCATOT": 3.0,     "NP1RTOT": 4.0,   "NP1PTOT": 3.5,
+    "GDS_TOTAL": 3.0,  "SCOPA_AUT_TOTAL": 6.0,
+    "NP2DRES": 0.6,    "NP2HYGN": 0.6,   "NP2HWRT": 0.9,
+    "NP2SPCH": 0.5,    "NP2SWAL": 0.5,   "NP2SALV": 0.7,
+    "NP2EAT": 0.5,     "NP2HOBB": 0.7,
+    "N_CONMEDS": 2.0,  "YRS_SINCE_SYMPTOM_ONSET": 4.0,
+    "YRS_SINCE_DIAGNOSIS": 3.5, "ENROLL_AGE": 10.0,
+}
+
+
+def _delta_direction(feat: str, d_val: float) -> str:
+    """Human-readable direction word for a feature delta."""
+    if feat in _NEUTRAL_FEATURES:
+        return "increased" if d_val > 0 else "decreased"
+    if feat in _HIGHER_IS_BETTER:
+        return "improved" if d_val > 0 else "worsened"
+    # Default: MDS-UPDRS / symptom scores — higher = worse
+    return "worsened" if d_val > 0 else "improved"
+
+
+def _load_transition_base_rates() -> Dict[str, float]:
+    """Read base rates from the transition model artifact, falling back to
+    hard-coded defaults if the artifact is absent (e.g. on a fresh clone)."""
+    trans_path = config.MODELS / "transition_model_production.pkl"
+    defaults = {"base_rate_12m": 0.42, "base_rate_next": 0.29}
+    if not trans_path.exists():
+        return defaults
+    try:
+        with open(trans_path, "rb") as f:
+            art = pickle.load(f)
+        models = art.get("models", {})
+        br_12m = models.get("FLIP_WITHIN_12M", {}).get("flip_rate", defaults["base_rate_12m"])
+        br_next = models.get("LABEL_FLIPPED_NEXT", {}).get("flip_rate", defaults["base_rate_next"])
+        return {"base_rate_12m": float(br_12m), "base_rate_next": float(br_next)}
+    except Exception:
+        return defaults
+
 
 class FactValidator:
-    """Verifies that generated narrative text strictly adheres to structured facts with zero hallucination."""
+    """Verifies that generated narrative text strictly adheres to structured facts."""
 
     IMPERATIVE_TERMS = [
         r"\bprescribe\b", r"\bstart\b\s+medication", r"\bincrease\b\s+dose",
@@ -87,6 +150,7 @@ class ExplanationOrchestrator:
 
     def __init__(self):
         self.validator = FactValidator()
+        self._base_rates = _load_transition_base_rates()
 
     def assemble_payload(
         self,
@@ -107,29 +171,33 @@ class ExplanationOrchestrator:
         top_label = sorted_probs[0][0]
         margin = round(sorted_probs[0][1] - sorted_probs[1][1], 3)
         
-        # Identify top feature deltas
+        # Identify top feature deltas, ranked by standardised magnitude (Δ / SD)
         delta_drivers = []
         for feat, d_val in feature_deltas.items():
+            if not isinstance(d_val, (int, float)) or not math.isfinite(d_val):
+                continue
             if abs(d_val) > 1e-4:
                 desc = FEATURE_DESCRIPTIONS.get(feat, feat)
-                # For MDS-UPDRS, positive delta means score worsened (increased severity)
-                direction = "worsened" if d_val > 0 else "improved"
-                if feat in ["MCATOT"]: # MoCA: higher is better
-                    direction = "improved" if d_val > 0 else "worsened"
+                direction = _delta_direction(feat, d_val)
+                sd = _COHORT_SD.get(feat, 1.0)
                 delta_drivers.append({
                     "feature": feat,
                     "description": desc,
                     "delta": round(float(d_val), 2),
                     "direction": direction,
+                    "std_magnitude": abs(d_val) / sd,
                 })
-        # Sort deltas by magnitude
-        delta_drivers.sort(key=lambda x: abs(x["delta"]), reverse=True)
+        # Sort deltas by standardised magnitude (most clinically notable first)
+        delta_drivers.sort(key=lambda x: x["std_magnitude"], reverse=True)
         
         n_flips = 0
         for i in range(1, len(trajectory_labels)):
             if trajectory_labels[i] != trajectory_labels[i - 1]:
                 n_flips += 1
-                
+
+        br_12m = self._base_rates["base_rate_12m"]
+        br_next = self._base_rates["base_rate_next"]
+
         payload = {
             "visit": {
                 "patient_id": patient_id,
@@ -156,9 +224,9 @@ class ExplanationOrchestrator:
             },
             "transition_risk": {
                 "p_flip_12m": round(transition_risk_12m, 2),
-                "base_rate_12m": 0.42,
+                "base_rate_12m": round(br_12m, 2),
                 "p_flip_next": round(transition_risk_next, 2),
-                "base_rate_next": 0.29,
+                "base_rate_next": round(br_next, 2),
             },
             "delta_drivers": delta_drivers[:4],
             "audit": {
@@ -209,14 +277,21 @@ class ExplanationOrchestrator:
             lines.append("Key changes since the prior visit include: " + "; ".join(delta_phrases) + ".")
             
         # Sentence 4: Longitudinal trajectory and transition risk
+        # Use unrounded values for comparison to avoid "42% above 42%"
         flip_pct = int(round(trans["p_flip_12m"] * 100))
         base_pct = int(round(trans["base_rate_12m"] * 100))
         stab_pct = int(round(traj["stability"] * 100))
-        
-        comparison = "below" if flip_pct < base_pct else "above"
+
+        if abs(flip_pct - base_pct) <= 1:
+            comparison_phrase = f"in line with the cohort base rate of {base_pct}%"
+        elif flip_pct < base_pct:
+            comparison_phrase = f"below the cohort base rate of {base_pct}%"
+        else:
+            comparison_phrase = f"above the cohort base rate of {base_pct}%"
+
         lines.append(
             f"The patient has maintained {stab_pct}% stability over {traj['n_visits']} recorded visits. "
-            f"Estimated probability of a subtype transition within 12 months is {flip_pct}%, which is {comparison} the cohort base rate of {base_pct}%."
+            f"Estimated probability of a subtype transition within 12 months is {flip_pct}%, which is {comparison_phrase}."
         )
         
         # Sentence 5: Audit disclaimer
@@ -227,15 +302,29 @@ class ExplanationOrchestrator:
         
         return " ".join(lines)
 
+    def _minimal_fallback(self, payload: Dict[str, Any]) -> str:
+        """Safe fallback text that states only the subtype and conformal set.
+
+        Used when the full template fails validation — guarantees no
+        hallucinated numbers or imperatives reach the consumer.
+        """
+        subtype = payload["prediction"]["label"]
+        set_str = "{" + ", ".join(payload["conformal"]["set"]) + "}"
+        cov_pct = int(round(payload["conformal"]["coverage"] * 100))
+        return (
+            f"Motor subtype is predicted as **{subtype}**. "
+            f"The {cov_pct}% conformal prediction set is {set_str}."
+        )
+
     def explain(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Generate verified explanation report with audit validation."""
         text = self.generate_deterministic_explanation(payload)
         val_res = self.validator.validate(text, payload)
         
         if not val_res["is_valid"]:
-            # Fallback if any error occurred
-            text = self.generate_deterministic_explanation(payload)
-            val_res = {"is_valid": True, "fallback_applied": True}
+            # Fallback: use a minimal safe text and report that validation failed
+            text = self._minimal_fallback(payload)
+            val_res = {"is_valid": False, "fallback_applied": True, "errors": val_res["errors"]}
             
         return {
             "payload": payload,

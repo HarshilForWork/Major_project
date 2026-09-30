@@ -46,3 +46,81 @@ def test_orchestrator_generates_verified_summary():
     assert "14%" in out["explanation_text"]
     assert "getting out of a chair" in out["explanation_text"]
     assert "Audit" in out["explanation_text"]
+
+
+def test_validator_rejects_and_produces_fallback():
+    """When the full template fails validation, the orchestrator must return
+    is_valid=False with a safe fallback — NOT silently accept the bad text."""
+    orchestrator = ExplanationOrchestrator()
+    payload = orchestrator.assemble_payload(
+        patient_id="PAT_9999",
+        visit_id="BL",
+        visit_month=0,
+        probabilities={"TD": 0.60, "PIGD": 0.30, "INDETERMINATE": 0.10},
+        conformal_set=["TD"],
+        previous_conformal_set=None,
+        transition_risk_12m=0.30,
+        transition_risk_next=0.20,
+        trajectory_labels=["TD"],
+        stability_index=1.0,
+        feature_deltas={},
+    )
+
+    # Manually inject an imperative into the payload text path to trigger rejection
+    class BadOrchestrator(ExplanationOrchestrator):
+        def generate_deterministic_explanation(self, payload):
+            return "Motor subtype is TD. You should prescribe medication."
+
+    bad = BadOrchestrator()
+    result = bad.explain(payload)
+    assert not result["validation"]["is_valid"]
+    assert result["validation"].get("fallback_applied") is True
+    # The fallback text should be safe (no imperative)
+    assert "prescribe" not in result["explanation_text"].lower()
+    assert "TD" in result["explanation_text"]
+
+
+def test_neutral_feature_direction():
+    """Features like 'time since onset' should say 'increased', not 'worsened'."""
+    orchestrator = ExplanationOrchestrator()
+    payload = orchestrator.assemble_payload(
+        patient_id="PAT_5555",
+        visit_id="V04",
+        visit_month=12,
+        probabilities={"TD": 0.50, "PIGD": 0.40, "INDETERMINATE": 0.10},
+        conformal_set=["TD", "PIGD"],
+        previous_conformal_set=None,
+        transition_risk_12m=0.42,
+        transition_risk_next=0.29,
+        trajectory_labels=["TD"],
+        stability_index=1.0,
+        feature_deltas={"YRS_SINCE_SYMPTOM_ONSET": 0.5, "N_CONMEDS": 1.0},
+    )
+
+    # Check the delta_drivers have neutral direction
+    for dd in payload["delta_drivers"]:
+        assert dd["direction"] in ("increased", "decreased"), (
+            f"{dd['feature']} should use neutral wording, got '{dd['direction']}'"
+        )
+
+
+def test_inline_comparison_for_matching_rates():
+    """When the flip probability matches the base rate (within ±1 pp), the
+    explanation should say 'in line with' instead of 'above' or 'below'."""
+    orchestrator = ExplanationOrchestrator()
+    payload = orchestrator.assemble_payload(
+        patient_id="PAT_7777",
+        visit_id="V02",
+        visit_month=6,
+        probabilities={"TD": 0.50, "PIGD": 0.40, "INDETERMINATE": 0.10},
+        conformal_set=["TD", "PIGD"],
+        previous_conformal_set=None,
+        transition_risk_12m=0.42,  # same as default base rate
+        transition_risk_next=0.29,
+        trajectory_labels=["TD"],
+        stability_index=1.0,
+        feature_deltas={},
+    )
+
+    text = orchestrator.generate_deterministic_explanation(payload)
+    assert "in line with" in text

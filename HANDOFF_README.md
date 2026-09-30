@@ -11,7 +11,7 @@
 
 
 > **File:** `HANDOFF_README.md`  
-> **Status:** Full Solution Implemented & Validated (17/17 tests passing)  
+> **Status:** Full Solution Implemented & Validated (tests pass; model-dependent tests skip on a fresh clone)  
 > **Cohort:** PPMI Parkinson's Disease Cohort (439 patients, 6,922 patient-visits)
 
 ---
@@ -61,7 +61,7 @@ flowchart TD
     end
 
     subgraph ExplanationLayer ["5. Explanation & Fact Validation"]
-        H["Fact Validator<br/>(Zero-Hallucination & Imperative Blocker)"]
+        H["Fact Validator<br/>(Imperative Blocker & Structural Verification)"]
         I["Explanation Orchestrator<br/>(Structured JSON + Clinical Narrative)"]
         
         G --> I
@@ -102,36 +102,42 @@ All evaluations use **5-fold `StratifiedGroupKFold` grouped by patient ID (`PATN
 
 | Experiment | Rows | Majority Class | Logistic Regression | XGBoost / Boosted Trees | Interpretation |
 |---|---|---|---|---|---|
-| **Binary (TD vs PIGD)** | 5,122 | 0.500 | **0.696** | **0.690** (AUC: 0.759) | Predictable from cheap intake data alone without specialist motor exam |
-| **All Visits (3-Class)** | 5,742 | 0.333 | **0.469** | **0.462** | Indeterminate class is inherently transient (76% flip rate) |
-| **Baseline Visit (3-Class)** | 438 | 0.333 | 0.445 | **0.451** | Single visit intake across full cohort |
-| **Sporadic First-Visit** | 216 | 0.500 | 0.584 | **0.530** | **Hardest honest test:** non-genetic patients on visit 1 remain near chance |
-| **Positive Control** | 5,742 | 0.500 | 0.907 | **0.907** (F1: 0.848) | Feeding banned items confirms pipeline integrity and proves low baseline scores reflect task hardness |
+| **Binary (TD vs PIGD)** | 5,020 | 0.500 | **0.695** | **0.683** (AUC: 0.745) | Predictable from cheap intake data alone without specialist motor exam |
+| **All Visits (3-Class)** | 5,638 | 0.333 | **0.462** | **0.457** | Indeterminate class is inherently transient (76% flip rate) |
+| **Baseline Visit (3-Class)** | 438 | 0.333 | 0.450 | **0.457** | Single visit intake across full cohort |
+| **Sporadic First-Visit** | 216 | 0.500 | 0.553 | **0.530** | **Hardest honest test:** non-genetic patients on visit 1 remain near chance |
+| **Positive Control** | 5,638 | 0.500 | 0.905 | **0.905** (F1: 0.842) | Feeding banned items confirms pipeline integrity and proves low baseline scores reflect task hardness |
 
 ### 2. Conformal Confidence Sets (90% Nominal Coverage Target)
 *Implemented in `src/trace_pd/models/conformal.py`*
 
 | Task | Method | Empirical Coverage | Mean Set Size | Size 1 (Singleton) | Size 2 (Dual Label) | Size 3 (Uncertain) |
 |---|---|---|---|---|---|---|
-| **Binary (TD vs PIGD)** | **LAC** | **89.32%** | **1.51** | **49.1%** | **50.9%** | — |
-| **Binary (TD vs PIGD)** | APS | 99.04% | 1.92 | 7.9% | 92.1% | — |
-| **3-Class Subtypes** | **LAC** | **89.12%** | **2.36** | **12.6%** | **39.2%** | **48.3%** |
-| **3-Class Subtypes** | APS | 98.57% | 2.87 | 1.0% | 10.7% | 88.2% |
+| **Binary (TD vs PIGD)** | **LAC** | **89.44%** | **1.53** | **47.4%** | **52.6%** | — |
+| **Binary (TD vs PIGD)** | APS | 89.42% | 1.61 | 39.3% | 60.7% | — |
+| **3-Class Subtypes** | **LAC** | **89.89%** | **2.39** | **10.6%** | **39.4%** | **50.0%** |
+| **3-Class Subtypes** | APS | 90.01% | 2.48 | 2.1% | 48.1% | 49.8% |
 
-* **Clinical Utility:** LAC achieves exactly 89–90% empirical coverage. In the binary setting, nearly half of all patients (49.1%) receive an unambiguous singleton prediction (`{TD}` or `{PIGD}`), while borderline patients are cleanly flagged with `{TD, PIGD}` to signal when a specialist motor exam is needed.
+> ✅ **Updated 30 Sep 2026.** Re-run on corrected data with the APS bug fixed.
+> Both methods now share a single score function (`_scores_all_classes`). **LAC is the default.**
+
+* **Clinical Utility:** LAC achieves the 90% marginal coverage target. In the binary setting, a significant fraction of patients receive an unambiguous singleton prediction (`{TD}` or `{PIGD}`), while borderline patients are flagged with `{TD, PIGD}` to signal when a specialist motor exam is needed.
 
 ### 3. Longitudinal Transition Risk (12-Month Horizon)
 *Implemented in `src/trace_pd/models/train_transition.py`*
 
 * **Target:** `FLIP_WITHIN_12M` (Patient subtype reclassifies at any visit within $\le 12$ months).
-* **Evaluated Pairs:** 5,105 visit pairs across 438 patients.
-* **Base Cohort Flip Rate:** 42.5%.
-* **Discriminative Power:** **0.6556 ROC-AUC**, **0.5836 PR-AUC**, Brier score **0.2303**.
+* **Evaluated Pairs:** 5,006 visit pairs across 438 patients.
+* **Base Cohort Flip Rate:** 41.8%.
+* **Discriminative Power:** **0.5643 ROC-AUC**, **0.4592 PR-AUC**.
+* **Calibration:** Brier **0.2444** vs base-rate **0.2433** — model does not yet beat the base rate on calibration.
+  Upstream features (`PROB_*`, `CONFORMAL_SET_SIZE`) are now generated out-of-fold; balanced sample weights
+  are retained for ranking but a separate unweighted model is used for Brier.
 * **Top Predictive Signals:**
-  1. `PROB_INDETERMINATE` ($0.0870$) — Proximity to borderline ratio ($0.90 - 1.15$).
-  2. `PROB_MARGIN_TOP2` ($0.0601$) — Uncertainty gap between top-2 predicted classes.
-  3. `PRIOR_VISITS_COUNT` ($0.0276$) — Follow-up maturity in disease timeline.
-  4. `NP2HYGN` / `YRS_SINCE_DIAGNOSIS` ($0.027$) — Autonomy progression in daily living.
+  1. `NP2DRES` ($0.0422$) — Dressing difficulty.
+  2. `HANDED` ($0.0417$) — Likely noise; worth investigating.
+  3. `YRS_SINCE_DIAGNOSIS` ($0.0402$) — Disease duration.
+  4. `PROB_PIGD` ($0.0355$) — Upstream subtype probability (now out-of-fold).
 
 ---
 
@@ -252,13 +258,13 @@ trace-pd/
 │   ├── inference.py                    # Unified End-to-End Pipeline & CLI
 │   └── viz/                            # Publication-grade figure generators
 │
-└── tests/                              # Automated test suite (17 passed)
-    ├── test_dataset_contract.py        # 9 dataset invariant & leakage guard tests
-    ├── test_conformal.py               # 2 conformal coverage & set validity tests
-    ├── test_transition.py              # 2 transition risk artifact tests
-    ├── test_tracker.py                 # 1 trajectory stability & deltas test
-    ├── test_orchestrator.py            # 2 fact validation & narrative tests
-    └── test_inference.py               # 1 end-to-end integration test
+└── tests/                              # Automated test suite (model-file tests skip on fresh clone)
+    ├── test_dataset_contract.py        # 10 dataset invariant & leakage guard tests
+    ├── test_conformal.py               # 4 conformal coverage, APS regression & set validity tests
+    ├── test_transition.py              # 2 transition risk artifact tests (skip if pkl absent)
+    ├── test_tracker.py                 # 3 trajectory stability, deltas & NaN-skew tests
+    ├── test_orchestrator.py            # 4 fact validation, fallback, direction & narrative tests
+    └── test_inference.py               # 1 end-to-end integration test (skip if pkl absent)
 ```
 
 ---
@@ -271,11 +277,12 @@ Run the full test suite anytime:
 python -m pytest tests -v
 ```
 
-All **17 unit and integration tests** verify:
+The test suite verifies:
 * Zero leakage: No label-defining items or recruitment flags in $X$.
 * Determinism: Output dataset reproduces byte-for-byte with zero duplicate visits.
-* Mathematical calibration: Empirical test coverage meets nominal 90% confidence target.
-* Zero hallucination: Stated report values strictly match tabular patient features.
+* Mathematical calibration: Empirical test coverage meets nominal 90% confidence target (APS regression guard included).
+* Structural verification: Stated report values are checked against the structured payload; imperative recommendations are blocked. The validator rejects bad text with a safe fallback.
+* Model-dependent tests skip gracefully on a fresh clone where `models/*.pkl` have not been trained yet.
 
 ---
 
