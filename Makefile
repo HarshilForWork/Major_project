@@ -1,10 +1,11 @@
-.PHONY: fcx c3 split compare rounds c3plus help setup preprocess baseline xgboost ablation sporadic figures docs test all clean
+.PHONY: ar1shap fcx c3 split compare rounds c3plus help setup preprocess baseline xgboost ablation sporadic figures docs test all clean
 
 PY := python
 
 help:
 	@echo "setup       install dependencies"
 	@echo "preprocess  raw PPMI  ->  data/processed/ppmi_tdpigd_long.csv"
+	@echo "preprocess-adni  raw ADNI tables  ->  data/processed/adni_dx_long.csv"
 	@echo "baseline    majority / logistic / HistGradientBoosting baselines"
 	@echo "xgboost     XGBoost baseline"
 	@echo "ablation    feature-group ablation study"
@@ -16,6 +17,7 @@ help:
 	@echo "compare     step 2: 12-config subtype classifier bake-off"
 	@echo "rounds      step 3: per-round models + FCX C1"
 	@echo "c3plus      step 4: E5/E6 transition models + FCX C3"
+	@echo "ar1shap     AR(1)-SHAP: patient-anchored Shapley values, evaluated against standard SHAP"
 	@echo "test        run the test suite"
 	@echo "all         preprocess -> baseline -> xgboost -> ablation -> figures"
 
@@ -24,6 +26,9 @@ setup:
 
 preprocess:
 	$(PY) src/trace_pd/data/preprocess.py
+
+preprocess-adni:
+	$(PY) -m trace_pd.data.preprocess_adni
 
 baseline:
 	$(PY) src/trace_pd/models/train_baseline.py
@@ -63,6 +68,18 @@ rounds:
 
 c3plus:
 	$(PY) -m trace_pd.evaluation.improve_c3
+
+ar1shap:
+	$(PY) -m trace_pd.evaluation.evaluate_ar1_shap
+
+split-adni:
+	$(PY) -m trace_pd.evaluation.splits_adni
+
+train-adni:
+	$(PY) -m trace_pd.models.train_adni
+
+ar1shap-adni:
+	$(PY) -m trace_pd.evaluation.evaluate_ar1_shap_adni
 
 docs:
 	$(PY) src/trace_pd/data/export_dictionary.py

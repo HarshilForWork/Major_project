@@ -575,8 +575,8 @@ Every material decision, what we picked, and why.
 Balanced accuracy. **3-class chance = 0.333, binary chance = 0.500.**
 
 > **Data version.** Numbers below are from the corrected dataset (§4.8) with
-> `GENETIC_COHORT` removed from X (26 features). Items marked ⏳ were produced before the §4.8
-> fix and must be re-run with `xgboost` installed (`make xgboost ablation conformal transition`).
+> `GENETIC_COHORT` removed from X (26 features). The XGBoost, ablation, conformal and
+> transition numbers were re-run on the corrected data on 30 Sep (synced 1 Oct 2026).
 
 ### 9.1 Main experiments
 
@@ -587,8 +587,9 @@ Balanced accuracy. **3-class chance = 0.333, binary chance = 0.500.**
 | 3 — all visits, **TD vs PIGD** | 0.500 | **0.694** | **0.689** |
 
 Source: `reports/metrics/baseline_model_results.txt`. Boosted trees here =
-`HistGradientBoostingClassifier`. Rutu's real-XGBoost run (pre-fix, 26 features) gave
-0.451 / 0.462 / 0.690 — ⏳ re-run pending.
+`HistGradientBoostingClassifier`. XGBoost on the corrected data gives 0.450 / 0.462 / 0.695
+(`reports/metrics/baseline_model_results_xgb.txt`). A 12-config bake-off and a locked 20% test set
+are in `docs/results_session_final.md`: binary 0.693 on the locked test, 95% CI [0.647, 0.738].
 
 ### 9.2 The hardest honest test
 
@@ -606,27 +607,27 @@ Source: `reports/metrics/sporadic_baseline_results.txt` (`make sporadic`).
 do it. MoCA is 0% present at baseline in this subset, and 41 PIGD patients is very little to
 learn from.
 
-### 9.3 Ablation — where the signal comes from ⏳
+### 9.3 Ablation — where the signal comes from
 
-Binary TD vs PIGD, all visits, XGBoost. Rutu's 28 Sep run, **before the §4.8 fix** — re-run pending.
+Binary TD vs PIGD, all visits, XGBoost, corrected data.
 
 | Configuration | Features | Balanced acc |
 |---|---|---|
-| **Full (26 features, `GENETIC_COHORT` removed)** | 26 | **0.690** |
-| Reference: + `GENETIC_COHORT` | 27 | 0.703 |
-| Drop axial items (`NP2RISE`, `NP2TURN`) | 24 | 0.681 |
-| Drop medication features | 23 | 0.673 |
-| Drop axial + medication | 21 | 0.669 |
-| Drop all Part II items | 16 | 0.674 |
-| Only Part II items | 10 | 0.642 |
-| Only the 2 axial items | 2 | 0.640 |
-| **Only `GENETIC_COHORT`** | **1** | **0.629** |
+| **Full (26 features, `GENETIC_COHORT` removed)** | 26 | **0.683** |
+| Reference: + `GENETIC_COHORT` | 27 | 0.696 |
+| Drop axial items (`NP2RISE`, `NP2TURN`) | 24 | 0.682 |
+| Drop medication features | 23 | 0.664 |
+| Drop axial + medication | 21 | 0.659 |
+| Drop all Part II items | 16 | 0.655 |
+| Only Part II items | 10 | 0.644 |
+| Only the 2 axial items | 2 | 0.636 |
+| **Only `GENETIC_COHORT`** | **1** | **0.630** |
 
 Source: `reports/metrics/ablation_results.txt`.
 
 **Two findings to be upfront about:**
 
-1. **`GENETIC_COHORT` alone scored 0.629.** It's a PPMI **recruitment-arm flag**, not a clinical
+1. **`GENETIC_COHORT` alone scored 0.630.** It's a PPMI **recruitment-arm flag**, not a clinical
    measurement — the genetic arm has a different TD/PIGD mix by design. It has been **removed
    from X**. Removing it cost only about 0.013, so the binary result doesn't depend on it.
 2. **`NP2RISE` and `NP2TURN` are top predictors.** Getting out of a chair and turning in bed are
@@ -641,42 +642,39 @@ macro-F1**. That confirms the pipeline is wired correctly, and that the low scor
 a **genuinely hard task**, not a bug. It's exactly the meaningless number the strict policy
 exists to prevent.
 
-### 9.5 Conformal confidence ⏳
+### 9.5 Conformal confidence
 
-Rutu's 28 Sep run (`reports/metrics/conformal_results.txt`), **before the §4.8 fix**:
+Corrected data (`reports/metrics/conformal_results.txt`):
 
 | Task | Method | Coverage | Singleton sets |
 |---|---|---|---|
-| TD vs PIGD | **LAC** | 89.3% | 49.1% |
-| 3-class | **LAC** | 89.1% | 12.6% |
-| TD vs PIGD | APS | 99.0% ⚠️ | 7.9% |
+| TD vs PIGD | **LAC** | 89.4% | 47.4% |
+| TD vs PIGD | APS | 89.4% | 39.3% |
+| 3-class | **LAC** | 89.9% | 10.6% |
+| 3-class | APS | 90.0% | 2.1% |
 
-⚠️ **The APS numbers come from a bug.** Calibration uses the randomised APS score but
-prediction uses the non-randomised rule, so sets are too large. On perfectly calibrated
-synthetic probabilities this implementation covers 97.9% instead of 90%; a consistent version
-covers 90.8%. **LAC is correct and is what the pipeline uses.** On the corrected data, an HGB +
-LAC check gave **90.1% coverage and 45.2% singletons** on TD vs PIGD.
+The APS bug (calibrated with the randomised score, predicted with the non-randomised rule, which
+gave 99% coverage) was **fixed on 30 Sep**; APS now hits its 90% target. LAC remains the default
+because its sets are smaller.
 
 **Coverage is not uniform.** On visits whose label sits close to the threshold (§9.7), coverage
 drops to **84.8%**, against 94.2% on robust visits. The 90% guarantee is marginal, and it hides
 this subgroup.
 
-### 9.6 Transition risk ⏳
+### 9.6 Transition risk
 
-Rutu's 28 Sep run (`reports/metrics/transition_results.txt`), **before the §4.8 fix**:
+Corrected data, upstream probabilities now **out-of-fold** (`reports/metrics/transition_results.txt`):
 
-| Target | Base rate | ROC-AUC | Balanced acc | Brier | Brier of always predicting the base rate |
+| Target | Base rate | ROC-AUC | Balanced acc | Brier (unweighted) | Brier of always predicting the base rate |
 |---|---|---|---|---|---|
-| Next visit | 29.1% | 0.647 | 0.590 | 0.227 | **0.206** — the model is worse |
-| Within 12 months | 42.5% | 0.656 | 0.603 | 0.230 | 0.244 |
+| Next visit | 28.7% | **0.533** | 0.520 | 0.208 | **0.205** — the model is no better |
+| Within 12 months | 41.8% | **0.564** | 0.545 | 0.244 | 0.243 — no better |
 
-**Known problems, to fix before these numbers are used:**
-
-- **Upstream probabilities are in-sample.** The subtype model that produces the `PROB_*`
-  features was trained on 80% of patients, then scored all of them. These need to be
-  out-of-fold predictions.
-- **Probabilities aren't calibrated.** Balanced sample weights push them toward 0.5, which is
-  why next-visit Brier is worse than a constant.
+The earlier 0.647 / 0.656 came mostly from a leak: upstream subtype probabilities were
+in-sample. With the leak removed, **the cheap-feature transition model has essentially no
+signal**. A model given the exam at visit *t* plus the previous visit reaches AUROC 0.80 (locked
+test 0.803), but needs the exam, so it is not the deployment setting
+(`docs/results_session_final.md` §4).
 
 ### 9.7 Label fragility — what transitions actually are
 
@@ -884,20 +882,20 @@ SCOPA-AUT**.
 | Ingestion, preprocessing, label engine | ✅ built; **missing-code bug fixed 30 Sep** (§4.8) | Harshil |
 | Leakage guard + feature registry | ✅ built, test-guarded; `GENETIC_COHORT` removed | Harshil, Rutu |
 | Subtype classifier | ✅ built, evaluated on corrected data (§9.1–9.4) | |
-| Conformal confidence | 🟡 built; LAC correct, **APS has a bug**; ⏳ re-run on corrected data | Rutu |
-| Transition-risk model | 🟡 built; **in-sample upstream features, uncalibrated**; ⏳ re-run | Rutu |
+| Conformal confidence | ✅ built; APS bug fixed 30 Sep; re-run on corrected data (§9.5) | Rutu |
+| Transition-risk model | 🟡 built; leak fixed (out-of-fold upstream); **no signal on cheap features** (AUROC 0.53, §9.6) | Rutu |
 | Longitudinal tracker | 🟡 built; first-visit deltas are 0.0 at serving vs NaN in training | Rutu |
 | Explanation orchestrator | 🟡 built as a template; **validator is a no-op**, raw-scale delta sorting | Rutu |
 | Inference pipeline + demo | ✅ built; `--patient-id` not wired | Rutu |
 | **Explainability — FCX** | ✅ built, evaluated, test-guarded (`docs/fcx.md`, `make fcx`) | Harshil |
+| **Explainability — AR(1)-SHAP** | ✅ built 1 Oct, evaluated, test-guarded (`docs/ar1_shap.md`, `make ar1shap`) | |
 
 **Next steps, in priority order:**
 
-1. **Re-run everything that needs `xgboost`** on the corrected data:
-   `make xgboost ablation conformal transition`, then `make test`.
-2. **Fix the conformal APS bug.** Use the same score function at prediction as at calibration.
-3. **Make the transition model's upstream features out-of-fold**, and calibrate its
-   probabilities (or drop balanced weights).
+1. ~~Re-run everything that needs `xgboost`~~ — done 30 Sep.
+2. ~~Fix the conformal APS bug~~ — done 30 Sep.
+3. ~~Make the transition model's upstream features out-of-fold~~ — done 30 Sep; the model then
+   lost its signal (§9.6).
 4. **Fix the orchestrator:** make the validator actually reject, rank deltas on a common scale,
    and give each feature the right "worse" direction.
 5. **Decide on the medication-state issue (§9.7):** label OFF-state exams only, or stratify.

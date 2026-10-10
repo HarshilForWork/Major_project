@@ -1,0 +1,92 @@
+==============================================================================
+ADNI preprocessing
+==============================================================================
+Run started: 2026-10-10T12:29:02
+
+[STEP 1] Visit backbone from REGISTRY
+  REGISTRY: 29675 rows, 5052 unique RID
+  Promoted 1397 screening visits to VISIT_MONTH=0 (these patients have no separate baseline visit; see decision 9)
+  Dropped 5290 rows with a non-fixed-timeline code (screening, screening-MRI, screen-fail, unscheduled, etc.)
+    dedup on ['RID', 'VISCODE2']: dropped 83 duplicate rows, kept the latest
+  Backbone: 24302 patient-visits, 4470 patients
+
+[STEP 2] Baseline exam date per patient
+  Baseline exam date known for 4438 / 4470 patients
+
+[STEP 3] Label (DIAGNOSIS) from DXSUM
+    dedup on ['RID', 'VISCODE2']: dropped 3 duplicate rows, kept the latest
+  DXSUM: 16501 rows; label distribution:
+LABEL
+MCI         6675
+CN          6659
+Dementia    3058
+NaN          109
+
+[STEP 4] CDR exam -- banned as label-defining (see decision 2)
+    dedup on ['RID', 'VISCODE2']: dropped 2 duplicate rows, kept the latest
+  Verification: CDGLOBAL=0 -> CN 89.7% of the time; CDGLOBAL>=1 -> Dementia 93.4% of the time (n=10755)
+
+[STEP 5] Demographics (PTDEMOG, static per patient)
+  AGE_AT_VISIT computed for 23389 / 24302 rows
+  Set 0 implausible ages (<40 or >110) to missing
+
+[STEP 6] APOE genotype (APOERES, static per patient, held out)
+
+[STEP 7] Cheap, routinely-collectable features
+    dedup on ['RID', 'VISCODE2']: dropped 1 duplicate rows, kept the latest
+  + MMSE: ['MMSE_TOTAL']
+    dedup on ['RID', 'VISCODE2']: dropped 1 duplicate rows, kept the latest
+  + MOCA: ['MOCA_TOTAL']
+    dedup on ['RID', 'VISCODE2']: dropped 2 duplicate rows, kept the latest
+  + GDSCALE: ['GDS_TOTAL']
+    dedup on ['RID', 'VISCODE2']: dropped 2 duplicate rows, kept the latest
+  + FAQ: ['FAQ_TOTAL']
+    dedup on ['RID', 'VISCODE2']: dropped 1 duplicate rows, kept the latest
+  + NPIQ: ['NPI_TOTAL']
+    dedup on ['RID', 'VISCODE2']: dropped 1 duplicate rows, kept the latest
+  + ECOGPT: ['ECOG_PATIENT_TOTAL']
+    dedup on ['RID', 'VISCODE2']: dropped 1 duplicate rows, kept the latest
+  + ECOGSP: ['ECOG_PARTNER_TOTAL']
+    dedup on ['RID', 'VISCODE2']: dropped 1 duplicate rows, kept the latest
+  + NEUROBAT: ['LOGMEM_IMMEDIATE', 'LOGMEM_DELAYED', 'BOSTON_NAMING', 'CATEGORY_FLUENCY_ANIMALS', 'TRAILS_A_SEC', 'TRAILS_B_SEC', 'DIGIT_SPAN']
+
+[STEP 7b] Vitals (VSWEIGHT/VSHEIGHT sentinel fix -- see decision 6)
+    dedup on ['RID', 'VISCODE2']: dropped 1 duplicate rows, kept the latest
+  Converted 137 sentinel (-1, 'not recorded') values to missing
+  Cleared 4 implausible weights and 27 implausible heights after unit conversion (likely wrong unit tag on the source form)
+  WEIGHT_KG: 17299 / 17622 usable; HEIGHT_CM: 17517 / 17622 usable after per-patient carry-forward
+
+  23 cheap features assembled
+
+[STEP 8] Transition target (LABEL_FLIPPED_NEXT), same construction as PPMI
+  5615 labelled consecutive-visit pairs; overall flip rate 8.7%
+LABEL
+CN           5.2
+Dementia     2.4
+MCI         13.4
+
+[STEP 9] Duplicate-key check
+  Duplicate RID+VISCODE2 rows: 0
+
+[STEP 10] Data dictionary and leakage guard
+  Columns per bucket:
+bucket
+CHEAP_FEATURE                 23
+BANNED_LABEL_DEFINING          8
+TARGET                         5
+KEY                            4
+ADMIN                          2
+RESOURCE_DEPENDENT_FEATURE     1
+  Leakage guard: PASSED (8 banned CDR columns, 23 usable cheap features)
+
+[STEP 11] Writing outputs
+  C:\Users\Aishwarya Deshmukh\Desktop\projects\MajorProject2027\Major_project\data\processed\adni_dx_long.csv: 24302 rows x 43 cols, 4470 patients
+  C:\Users\Aishwarya Deshmukh\Desktop\projects\MajorProject2027\Major_project\data\processed\adni_dx_dictionary.csv: 43 column definitions
+  Labelled rows: 14336 (59.0%)
+LABEL
+NaN         9966
+MCI         5903
+CN          5652
+Dementia    2781
+
+Run finished: 2026-10-10T12:29:04

@@ -1,0 +1,70 @@
+PHASE,ID,VISCODE,VISNAME,VISORDER
+ADNI1,1.0,sc,Screening,1.0
+ADNI1,2.0,bl,Baseline,2.0
+ADNI1,3.0,m06,Month 6,3.0
+ADNI1,4.0,m12,Month 12,4.0
+ADNI1,5.0,m18,Month 18,5.0
+ADNI1,6.0,m24,Month 24,6.0
+ADNI1,7.0,m30,Month 30,7.0
+ADNI1,8.0,m36,Month 36,8.0
+ADNI1,9.0,m42,Month 42,9.0
+ADNI1,10.0,m48,Month 48,10.0
+ADNI1,11.0,m54,Month 54,11.0
+ADNI1,12.0,uns1,Unscheduled,
+ADNI1,13.0,f,Screen Fail,
+ADNI1,14.0,nv,No Visit Defined,
+ADNIGO,1.0,sc,Screening,1.0
+ADNIGO,2.0,scmri,Screening MRI,2.0
+ADNIGO,3.0,bl,Baseline,3.0
+ADNIGO,4.0,m03,Month 3 MRI,4.0
+ADNIGO,5.0,m06,Month 6,5.0
+ADNIGO,6.0,m12,Month 12,6.0
+ADNIGO,7.0,m18,Month 18,7.0
+ADNIGO,8.0,m36,Month 36,8.0
+ADNIGO,9.0,m42,Month 42,9.0
+ADNIGO,10.0,m48,Month 48,10.0
+ADNIGO,11.0,m54,Month 54,11.0
+ADNIGO,12.0,m60,Month 60,12.0
+ADNIGO,13.0,m66,Month 66,13.0
+ADNIGO,14.0,m72,Month 72,14.0
+ADNIGO,15.0,m78,Month 78,15.0
+ADNIGO,16.0,nv,No Visit Defined,
+ADNI2,1.0,v01,Screening - New Pt,1.0
+ADNI2,2.0,v02,Screening MRI - New Pt,2.0
+ADNI2,3.0,v03,Baseline - New Pt,3.0
+ADNI2,4.0,v04,Month 3 MRI - New Pt,4.0
+ADNI2,5.0,v05,Month 6 - New Pt,5.0
+ADNI2,6.0,v06,ADNI2 Initial Visit - Continuing Pt,6.0
+ADNI2,7.0,v07,ADNI2 Initial TelCheck - Continuing Pt,7.0
+ADNI2,8.0,v11,ADNI2 Year 1 Visit,8.0
+ADNI2,9.0,v12,ADNI2 Year 1 TelCheck,9.0
+ADNI2,10.0,v21,ADNI2 Year 2 Visit,10.0
+ADNI2,11.0,v22,ADNI2 Year 2 TelCheck,11.0
+ADNI2,12.0,v31,ADNI2 Year 3 Visit,12.0
+ADNI2,13.0,v32,ADNI2 Year 3 TelCheck,13.0
+ADNI2,14.0,v41,ADNI2 Year 4 Visit,14.0
+ADNI2,15.0,v42,ADNI2 Year 4 TelCheck,15.0
+ADNI2,16.0,v51,ADNI2 Year 5 Visit,16.0
+ADNI2,17.0,v52,ADNI2 Year 5 TelCheck,17.0
+ADNI2,18.0,nv,No Visit Defined,
+ADNI2,19.0,tau,ADNI2 Tau-only visit,
+ADNI3,1.0,reg,Participant Registration,1.0
+ADNI3,2.0,sc,Screening - New Pt,2.0
+ADNI3,3.0,bl,Baseline - New Pt,3.0
+ADNI3,4.0,init,ADNI3 Initial Visit - Continuing Pt,4.0
+ADNI3,5.0,y1,ADNI3 Year 1 Visit,5.0
+ADNI3,6.0,y2,ADNI3 Year 2 Visit,6.0
+ADNI3,7.0,y3,ADNI3 Year 3 Visit,7.0
+ADNI3,8.0,y4,ADNI3 Year 4 Visit,8.0
+ADNI3,9.0,y5,ADNI3 Year 5 Visit,9.0
+ADNI3,10.0,y6,ADNI3 Year 6 Visit,10.0
+ADNI4,1.0,4_reg,Participant Registration,1.0
+ADNI4,2.0,4_sc,Screening - New Pt,2.0
+ADNI4,3.0,4_bl,Baseline - New Pt,3.0
+ADNI4,4.0,4_init,ADNI4 Initial Visit - Continuing Pt,4.0
+ADNI4,5.0,4_m12,Month 12,5.0
+ADNI4,6.0,4_m24,Month 24,6.0
+ADNI4,7.0,4_m36,Month 36,7.0
+ADNI4,8.0,4_m48,Month 48,8.0
+ADNI4,9.0,4_disp,Final Disposition,9.0
+,,AUT,Autopsy,

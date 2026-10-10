@@ -1,0 +1,119 @@
+==============================================================================
+AR(1)-SHAP -- evaluation
+==============================================================================
+features: 26  (fixed 2: ['HANDED', 'SEX']; clock 3: ['AGE_AT_VISIT', 'YRS_SINCE_DIAGNOSIS', 'YRS_SINCE_SYMPTOM_ONSET']; changing 21)
+Shapley sampling: 48 permutations x 24 draws per coalition
+
+Model explained: binary XGBoost, dev patients only. Locked-test balanced accuracy 0.676 (1018 visits) -- same level as the project's 0.69.
+
+------------------------------------------------------------------------------
+T1  Does the patient's own past predict the next visit?
+------------------------------------------------------------------------------
+visit pairs: development 5189, locked test 1294
+model                                        held-out log-lik  mean R2
+population only (no history)                          -1.1231    0.000
+own previous value only (per feature)                 -0.9180    0.469
+all previous values (fixed gap)                       -0.8491    0.499
+all previous values + gap length  [USED]              -0.8426    0.497
+
+by gap (held-out log-lik): ~3 mo n=430: fixed-gap -0.789 vs gap-aware -0.786, ~6 mo n=768: fixed-gap -0.863 vs gap-aware -0.857, >=9 mo n=96: fixed-gap -1.016 vs gap-aware -0.984
+average leftover spread by gap: ~3 mo 0.554, ~6 mo 0.611, >=9 mo 0.645  (ridge alpha 30.0, shrinkage 0.15)
+
+------------------------------------------------------------------------------
+T2  Is the estimator correct? (simulated patients, true answer computed exactly)
+------------------------------------------------------------------------------
+AR(1)-SHAP estimate vs exact truth: correlation 0.990, average error 15.0% of the average true value (60 visits x 5 features)
+  same estimator given the TRUE parameters: correlation 0.994, average error 11.4%  -> the gap between the two lines is the cost of fitting A and Sigma; the rest is random-sampling noise, which shrinks with more samples
+standard SHAP estimate vs its own exact truth: correlation 1.000
+unused feature D3 (model weight 0, but correlated with used ones): true AR(1)-SHAP credit 0.211, estimated 0.208, standard SHAP 0.000  (average true credit of a feature: 0.356)
+
+Explaining 940 locked-test visits (88 patients); background for standard SHAP = 2150 complete development visits
+
+------------------------------------------------------------------------------
+T3  Are the filled-in visits realistic? ('Frankenstein patient' test)
+------------------------------------------------------------------------------
+filler                         detectable (all 26)  detectable (21 changing)  jump ratio
+standard SHAP                                0.976                     0.861        2.31
+population-conditional                       0.959                     0.822        1.84
+AR(1)-SHAP                                   0.679                     0.681        1.12
+AR(1)-SHAP, roles learned                    0.845                     0.659        1.12
+detectable = AUROC of a classifier telling real from filled visits (0.5 = looks real).
+jump ratio = typical visit-to-visit jump in filled values / in real values (1.0 = realistic).
+
+------------------------------------------------------------------------------
+T4  How do the explanations change?
+------------------------------------------------------------------------------
+  standard SHAP                    43s   max add-up error 6.7e-16
+  population-conditional          477s   max add-up error 8.9e-16
+  AR(1)-SHAP                      648s   max add-up error 3.3e-16
+  AR(1)-SHAP, roles learned       512s   max add-up error 8.9e-16
+
+Share of total credit, % (mean |contribution| over visits):
+feature                       standard    pop-cond       AR(1) AR(1)-learn    TreeSHAP
+SEX                               12.3        10.9         0.0         0.0        11.6
+LEDD_TOTAL_MG                     10.2         9.2        10.2         9.6        10.6
+NP2RISE                            9.6         8.6        13.8        13.0         9.7
+YRS_SINCE_DIAGNOSIS                9.5         6.4         0.0         2.5         7.5
+NP2SPCH                            5.5         5.5         7.5         7.1         5.2
+NP2EAT                             4.8         1.6         4.4         4.1         4.0
+PDTRTMNT                           4.8         6.1         3.9         3.6         5.4
+NP2HYGN                            3.8         4.6         6.6         6.2         4.1
+N_CONMEDS                          3.7         3.4         3.9         3.7         3.3
+NP2TURN                            3.5         4.9         5.5         5.3         3.1
+YRS_SINCE_SYMPTOM_ONSET            3.3         4.2         0.0         1.7         3.2
+STAI_TOTAL                         3.3         3.0         6.0         5.6         3.4
+NP1RTOT                            3.2         4.0         5.5         5.2         3.0
+AGE_AT_VISIT                       2.9         2.9         0.0         1.1         2.8
+NP2DRES                            2.9         4.1         5.3         5.2         2.7
+ESS_TOTAL                          2.8         1.7         3.8         3.5         3.1
+HANDED                             2.3         1.4         0.0         0.0         2.5
+NP2HWRT                            2.2         2.7         3.7         3.6         1.9
+SCOPA_AUT_TOTAL                    2.0         2.5         3.3         3.2         2.0
+NP1PTOT                            2.0         2.7         3.5         3.4         1.8
+GDS_TOTAL                          1.6         1.9         3.1         2.9         1.6
+MCATOT                             1.5         1.6         3.0         2.8         4.7
+RBDSQ_TOTAL                        0.8         0.9         1.9         1.8         1.0
+NP2HOBB                            0.6         2.5         2.5         2.5         0.6
+NP2SALV                            0.6         1.4         1.6         1.5         0.6
+NP2SWAL                            0.4         1.3         0.9         0.9         0.3
+total |credit| (log-odds)        2.963       3.297       1.415       1.505       3.039
+average |prediction - starting point|: standard 1.059, pop-cond 1.011, AR(1) 0.472, AR(1)-learn 0.480
+
+Years since diagnosis (YRS_SINCE_DIAGNOSIS), change against standard SHAP:
+  population-conditional       raw credit  -24.8%   share of credit  -32.5%   rank 4
+  AR(1)-SHAP                   raw credit -100.0%   share of credit -100.0%   rank 24
+  AR(1)-SHAP, roles learned    raw credit  -86.8%   share of credit  -74.0%   rank 19
+  (rank under standard SHAP: 4)
+
+Credit by feature type, % of total:
+type                                    standard    pop-cond       AR(1) AR(1)-learn    TreeSHAP
+fixed (sex, handedness)                     14.6        12.2         0.0         0.1        14.2
+clocks (age, years since dx/onset)          15.7        13.5         0.0         5.2        13.5
+changing (21)                               69.7        74.3       100.0        94.7        72.3
+
+Most common top driver per visit (% of visits):
+  standard     SEX 26%, YRS_SINCE_DIAGNOSIS 18%, LEDD_TOTAL_MG 16%
+  pop-cond     SEX 26%, PDTRTMNT 18%, LEDD_TOTAL_MG 13%
+  AR(1)        NP2RISE 27%, LEDD_TOTAL_MG 14%, PDTRTMNT 8%
+  AR(1)-learn  NP2RISE 27%, LEDD_TOTAL_MG 15%, NP2SPCH 8%
+  TreeSHAP     SEX 26%, LEDD_TOTAL_MG 24%, NP2RISE 20%
+
+Per-visit agreement of rankings (Spearman; 1 = same order):
+  standard vs AR(1): all features 0.227, 21 changing features only 0.573
+  pop-cond vs AR(1): all features 0.287, 21 changing features only 0.564
+  standard vs pop-cond: all features 0.688, 21 changing features only 0.649
+  AR(1) vs AR(1)-learn: all features 0.867, 21 changing features only 0.969
+top driver differs between standard SHAP and AR(1)-SHAP on 72.0% of visits; top CHANGING-feature driver differs on 57.7%
+
+Does history matter more for features that carry over more? Spearman between a feature's visit-to-visit carry-over and its change in share (AR(1) vs population-conditional): -0.134
+Does credit go to the features that moved unexpectedly since the last visit? Per-visit Spearman between |credit| and |surprise|: standard +0.061, pop-cond +0.180, AR(1) +0.408, AR(1)-learn +0.412
+
+------------------------------------------------------------------------------
+T5  Are the explanations stable? (same 80 visits, different random seed)
+------------------------------------------------------------------------------
+  standard SHAP                seed-to-seed ranking agreement 0.988
+  population-conditional       seed-to-seed ranking agreement 0.965
+  AR(1)-SHAP                   seed-to-seed ranking agreement 0.988
+  AR(1)-SHAP, roles learned    seed-to-seed ranking agreement 0.978
+
+Runtime 32.1 min. Attributions saved to models/ar1_shap_artifacts.pkl

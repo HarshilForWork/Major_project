@@ -1,0 +1,30 @@
+ADNI classifier bake-off -- 23 cheap features
+development: 19306 visits, 3576 patients; locked test: 4996 visits, 894 patients
+
+==========================================================================
+TASK: 3-class CN/MCI/Dementia  (classes: ['CN', 'MCI', 'Dementia'])
+==========================================================================
+n = 11434 visits, 2930 patients, class counts: {'MCI': 4686, 'CN': 4547, 'Dementia': 2201}
+
+majority baseline balanced accuracy: 0.3333
+logistic     CV balanced_acc 0.7541  macro_F1 0.7431
+xgboost      CV balanced_acc 0.7843  macro_F1 0.7720
+hgb          CV balanced_acc 0.7821  macro_F1 0.7696
+
+winner by CV balanced accuracy: xgboost
+
+LOCKED TEST (xgboost): balanced_acc 0.7957  95% CI [0.778, 0.816]  macro_F1 0.7774
+
+==========================================================================
+TASK: binary CN vs Dementia  (classes: ['CN', 'Dementia'])
+==========================================================================
+n = 6748 visits, 2121 patients, class counts: {'CN': 4547, 'Dementia': 2201}
+
+majority baseline balanced accuracy: 0.5000
+logistic     CV balanced_acc 0.9766  macro_F1 0.9764
+xgboost      CV balanced_acc 0.9786  macro_F1 0.9788
+hgb          CV balanced_acc 0.9775  macro_F1 0.9779
+
+winner by CV balanced accuracy: xgboost
+
+LOCKED TEST (xgboost): balanced_acc 0.9802  95% CI [0.970, 0.988]  macro_F1 0.9790  AUROC 0.9959

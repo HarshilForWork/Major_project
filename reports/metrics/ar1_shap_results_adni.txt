@@ -1,0 +1,121 @@
+==============================================================================
+AR(1)-SHAP on ADNI -- second-cohort evaluation
+==============================================================================
+features: 23  (fixed 3: ['EDUCATION_YEARS', 'HANDED', 'SEX']; clock 1: ['AGE_AT_VISIT']; changing 19)
+Feature roles were DETECTED from the data (ar1.detect_feature_roles), not hard-coded:
+  EDUCATION_YEARS              static (100.0% of 2152 repeat-visit patients never change)
+  HANDED                       static (100.0% of 2154 repeat-visit patients never change)
+  SEX                          static (100.0% of 2157 repeat-visit patients never change)
+  AGE_AT_VISIT                 clock (within-patient linear-in-time R2=1.0000, n_patients=1766)
+Shapley sampling: 48 permutations x 24 draws per coalition
+
+Model explained: binary XGBoost (CN vs Dementia), dev patients only. Locked-test balanced accuracy 0.980 (1685 visits) -- matches reports/metrics/adni_baseline_results.txt (0.980).
+
+------------------------------------------------------------------------------
+T1  Does the patient's own past predict the next visit?
+------------------------------------------------------------------------------
+visit pairs: development 15730, locked test 4102
+model                                        held-out log-lik  mean R2
+population only (no history)                          -1.1798    0.000
+own previous value only (per feature)                 -0.9500    0.521
+all previous values (fixed gap)                       -0.8255    0.579
+all previous values + gap length  [USED]              -0.8173    0.578
+
+by gap (held-out log-lik): ~3 mo n=378: fixed-gap -0.769 vs gap-aware -0.660, ~6 mo n=2775: fixed-gap -0.813 vs gap-aware -0.814, >=9 mo n=949: fixed-gap -0.865 vs gap-aware -0.864
+average leftover spread by gap: ~3 mo 0.580, ~6 mo 0.628, >=9 mo 0.613  (ridge alpha 30.0, shrinkage 0.0)
+
+------------------------------------------------------------------------------
+T2  Is the estimator correct? (simulated patients, true answer computed exactly)
+------------------------------------------------------------------------------
+AR(1)-SHAP estimate vs exact truth: correlation 0.990, average error 15.0% of the average true value (60 visits x 5 features)
+  same estimator given the TRUE parameters: correlation 0.994, average error 11.4%
+standard SHAP estimate vs its own exact truth: correlation 1.000
+unused feature D3 (model weight 0, but correlated with used ones): true AR(1)-SHAP credit 0.211, estimated 0.208, standard SHAP 0.000  (average true credit of a feature: 0.356)
+
+Explaining 1262 locked-test visits (381 patients); background for standard SHAP = 6748 development (NaN included) visits
+
+------------------------------------------------------------------------------
+T3  Are the filled-in visits realistic? ('Frankenstein patient' test)
+------------------------------------------------------------------------------
+filler                          detectable (all)   detectable (changing)  jump ratio
+standard SHAP                              0.977                   0.929        2.61
+population-conditional                     0.956                   0.856        1.76
+AR(1)-SHAP                                 0.751                   0.750        1.18
+AR(1)-SHAP, roles learned                  0.742                   0.740        1.15
+detectable = AUROC of a classifier telling real from filled visits (0.5 = looks real).
+jump ratio = typical visit-to-visit jump in filled values / in real values (1.0 = realistic).
+
+------------------------------------------------------------------------------
+T4  How do the explanations change?
+------------------------------------------------------------------------------
+  standard SHAP                   139s   max add-up error 5.3e-15
+  population-conditional          946s   max add-up error 3.6e-15
+  AR(1)-SHAP                      609s   max add-up error 1.8e-15
+  AR(1)-SHAP, roles learned      1078s   max add-up error 2.7e-15
+
+Share of total credit, % (mean |contribution| over visits):
+feature                       standard    pop-cond       AR(1) AR(1)-learn    TreeSHAP
+FAQ_TOTAL                         35.4        20.9        17.5        17.5        35.6
+MMSE_TOTAL                        14.5        13.2        15.2        15.2        13.1
+LOGMEM_DELAYED                    10.8         9.4         9.9         9.8        10.8
+CATEGORY_FLUENCY_ANIMALS           8.4         9.1        10.4        10.4         6.9
+LOGMEM_IMMEDIATE                   3.5         7.6         7.3         7.3         3.1
+TRAILS_B_SEC                       3.4         5.5         5.1         5.1         3.5
+BOSTON_NAMING                      3.0         5.2         4.8         4.9         3.0
+GDS_TOTAL                          2.6         3.4         5.9         5.9         2.5
+NPI_TOTAL                          2.6         3.6         3.2         3.2         3.4
+MOCA_TOTAL                         2.2         2.1         2.1         2.1         3.4
+AGE_AT_VISIT                       2.1         1.4         0.0         0.2         1.6
+PULSE                              1.7         1.5         4.0         4.0         1.6
+HEIGHT_CM                          1.5         1.3         1.0         1.0         2.6
+WEIGHT_KG                          1.3         1.2         1.8         1.8         1.2
+TRAILS_A_SEC                       1.1         5.0         3.3         3.3         1.0
+BP_DIASTOLIC                       0.9         0.8         2.4         2.4         0.9
+BP_SYSTOLIC                        0.8         0.7         2.1         2.1         0.8
+SEX                                0.8         1.6         0.0         0.0         0.7
+EDUCATION_YEARS                    0.8         1.4         0.0         0.0         0.7
+DIGIT_SPAN                         0.7         2.0         1.0         1.0         1.2
+ECOG_PATIENT_TOTAL                 0.6         1.0         1.4         1.4         1.1
+HANDED                             0.6         0.5         0.0         0.0         0.5
+ECOG_PARTNER_TOTAL                 0.4         1.5         1.5         1.5         0.9
+total |credit| (log-odds)        7.781       9.167       3.131       3.133       8.767
+average |prediction - starting point|: standard 6.166, pop-cond 6.095, AR(1) 1.421, AR(1)-learn 1.417
+
+AGE_AT_VISIT (ADNI's clock feature, no 'years since diagnosis' equivalent exists), change against standard SHAP:
+  population-conditional       raw credit  -23.3%   share of credit  -34.9%   rank 17
+  AR(1)-SHAP                   raw credit -100.0%   share of credit -100.0%   rank 20
+  AR(1)-SHAP, roles learned    raw credit  -96.8%   share of credit  -92.0%   rank 20
+  (rank under standard SHAP: 11)
+
+Credit by feature type, % of total:
+type                                    standard    pop-cond       AR(1) AR(1)-learn    TreeSHAP
+fixed (sex, handedness, education)           2.1         3.5         0.0         0.0         1.9
+clock (age)                                  2.1         1.4         0.0         0.2         1.6
+changing (19)                               95.8        95.1       100.0        99.8        96.5
+
+Most common top driver per visit (% of visits):
+  standard     FAQ_TOTAL 86%, NPI_TOTAL 6%, LOGMEM_DELAYED 4%
+  pop-cond     FAQ_TOTAL 51%, MMSE_TOTAL 16%, LOGMEM_DELAYED 11%
+  AR(1)        FAQ_TOTAL 23%, MMSE_TOTAL 21%, CATEGORY_FLUENCY_ANIMALS 12%
+  AR(1)-learn  FAQ_TOTAL 23%, MMSE_TOTAL 20%, CATEGORY_FLUENCY_ANIMALS 12%
+  TreeSHAP     FAQ_TOTAL 95%, LOGMEM_DELAYED 3%, MMSE_TOTAL 2%
+
+Per-visit agreement of rankings (Spearman; 1 = same order):
+  standard vs AR(1): all features 0.583, changing features only 0.478
+  pop-cond vs AR(1): all features 0.576, changing features only 0.511
+  standard vs pop-cond: all features 0.737, changing features only 0.737
+  AR(1) vs AR(1)-learn: all features 0.958, changing features only 0.973
+top driver differs between standard SHAP and AR(1)-SHAP on 72.4% of visits; top CHANGING-feature driver differs on 71.9%
+
+Does history matter more for features that carry over more? Spearman between a feature's visit-to-visit carry-over and its change in share (AR(1) vs population-conditional): -0.523
+Does credit go to the features that moved unexpectedly since the last visit? Per-visit Spearman between |credit| and |surprise|: standard +0.004, pop-cond +0.111, AR(1) +0.413, AR(1)-learn +0.410
+
+------------------------------------------------------------------------------
+T5  Are the explanations stable? (same 80 visits, different random seed)
+------------------------------------------------------------------------------
+  standard SHAP                seed-to-seed ranking agreement 0.992
+  population-conditional       seed-to-seed ranking agreement 0.958
+  AR(1)-SHAP                   seed-to-seed ranking agreement 0.985
+  AR(1)-SHAP, roles learned    seed-to-seed ranking agreement 0.978
+
+Runtime 57.0 min. Attributions saved to models/ar1_shap_artifacts_adni.pkl

@@ -1,0 +1,44 @@
+column,bucket,dtype,pct_present,n_unique,bucket_meaning
+COLPROT,ADMIN,object,100.0,6,Provenance / bookkeeping. Not a predictor.
+ORIGPROT,ADMIN,object,100.0,6,Provenance / bookkeeping. Not a predictor.
+CDCARE,BANNED_LABEL_DEFINING,float64,47.6,5,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+CDCOMMUN,BANNED_LABEL_DEFINING,float64,47.6,6,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+CDGLOBAL,BANNED_LABEL_DEFINING,float64,47.6,6,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+CDHOME,BANNED_LABEL_DEFINING,float64,47.6,6,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+CDJUDGE,BANNED_LABEL_DEFINING,float64,47.6,6,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+CDMEMORY,BANNED_LABEL_DEFINING,float64,47.6,6,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+CDORIENT,BANNED_LABEL_DEFINING,float64,47.6,6,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+CDRSB,BANNED_LABEL_DEFINING,float64,47.2,33,Part of the CDR exam the diagnosis is informed by / enrollment-gated on. Never a feature.
+AGE_AT_VISIT,CHEAP_FEATURE,float64,96.2,133,Routinely collectable without a specialist work-up. Used for training.
+BOSTON_NAMING,CHEAP_FEATURE,float64,36.5,31,Routinely collectable without a specialist work-up. Used for training.
+BP_DIASTOLIC,CHEAP_FEATURE,float64,57.6,86,Routinely collectable without a specialist work-up. Used for training.
+BP_SYSTOLIC,CHEAP_FEATURE,float64,57.6,132,Routinely collectable without a specialist work-up. Used for training.
+CATEGORY_FLUENCY_ANIMALS,CHEAP_FEATURE,float64,53.8,45,Routinely collectable without a specialist work-up. Used for training.
+DIGIT_SPAN,CHEAP_FEATURE,float64,15.6,81,Routinely collectable without a specialist work-up. Used for training.
+ECOG_PARTNER_TOTAL,CHEAP_FEATURE,float64,11.4,520,Routinely collectable without a specialist work-up. Used for training.
+ECOG_PATIENT_TOTAL,CHEAP_FEATURE,float64,11.4,394,Routinely collectable without a specialist work-up. Used for training.
+EDUCATION_YEARS,CHEAP_FEATURE,float64,96.2,17,Routinely collectable without a specialist work-up. Used for training.
+FAQ_TOTAL,CHEAP_FEATURE,float64,55.3,31,Routinely collectable without a specialist work-up. Used for training.
+GDS_TOTAL,CHEAP_FEATURE,float64,43.3,15,Routinely collectable without a specialist work-up. Used for training.
+HANDED,CHEAP_FEATURE,object,96.3,2,Routinely collectable without a specialist work-up. Used for training.
+HEIGHT_CM,CHEAP_FEATURE,float64,58.3,479,Routinely collectable without a specialist work-up. Used for training.
+LOGMEM_DELAYED,CHEAP_FEATURE,float64,38.6,26,Routinely collectable without a specialist work-up. Used for training.
+LOGMEM_IMMEDIATE,CHEAP_FEATURE,float64,38.8,26,Routinely collectable without a specialist work-up. Used for training.
+MMSE_TOTAL,CHEAP_FEATURE,float64,46.8,31,Routinely collectable without a specialist work-up. Used for training.
+MOCA_TOTAL,CHEAP_FEATURE,float64,16.8,30,Routinely collectable without a specialist work-up. Used for training.
+NPI_TOTAL,CHEAP_FEATURE,float64,31.5,27,Routinely collectable without a specialist work-up. Used for training.
+PULSE,CHEAP_FEATURE,float64,57.5,92,Routinely collectable without a specialist work-up. Used for training.
+SEX,CHEAP_FEATURE,object,96.5,2,Routinely collectable without a specialist work-up. Used for training.
+TRAILS_A_SEC,CHEAP_FEATURE,float64,53.3,153,Routinely collectable without a specialist work-up. Used for training.
+TRAILS_B_SEC,CHEAP_FEATURE,float64,51.8,293,Routinely collectable without a specialist work-up. Used for training.
+WEIGHT_KG,CHEAP_FEATURE,float64,57.4,2098,Routinely collectable without a specialist work-up. Used for training.
+EXAMDATE,KEY,object,83.5,4814,Identifiers and timeline.
+RID,KEY,float64,100.0,4470,Identifiers and timeline.
+VISCODE2,KEY,object,100.0,47,Identifiers and timeline.
+VISIT_MONTH,KEY,int64,100.0,44,Identifiers and timeline.
+APOE_GENOTYPE,RESOURCE_DEPENDENT_FEATURE,object,93.1,6,"Needs a lab test (genotyping). Held out, not used for training."
+LABEL,TARGET,object,59.0,3,"The label, or computed from it."
+LABEL_FLIPPED_NEXT,TARGET,float64,23.1,2,"The label, or computed from it."
+MONTHS_TO_NEXT_VISIT,TARGET,float64,81.6,19,"The label, or computed from it."
+NEXT_LABEL,TARGET,object,43.9,3,"The label, or computed from it."
+NEXT_VISIT_MONTH,TARGET,float64,81.6,44,"The label, or computed from it."
