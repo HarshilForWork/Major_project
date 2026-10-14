@@ -1,0 +1,96 @@
+{
+  "ppmi": {
+    "trace": {
+      "n_pairs": 11049,
+      "max": 7.877690055835274e-08,
+      "mean_of_patient_means": 1.1994123703838518e-08
+    },
+    "direct": {
+      "n_pairs": 11049,
+      "max": 1.217056251334725e-07,
+      "mean_of_patient_means": 1.2564033291496625e-08
+    },
+    "chain": {
+      "n_pairs": 11049,
+      "max": 1.0286453289154451e-07,
+      "mean_of_patient_means": 1.3826554791968972e-08
+    },
+    "fixed_first": {
+      "n_pairs": 11049,
+      "max": 1.0666258276614826e-07,
+      "mean_of_patient_means": 1.7243971306634297e-08
+    },
+    "fixed_last": {
+      "n_pairs": 11049,
+      "max": 1.068626716005383e-07,
+      "mean_of_patient_means": 1.5740498556616283e-08
+    },
+    "population": {
+      "n_pairs": 11049,
+      "max": 6.344092984278404e-08,
+      "mean_of_patient_means": 1.223383155966813e-08
+    },
+    "path_dep": {
+      "n_pairs": 11049,
+      "max": 1.3842716271028621e-06,
+      "mean_of_patient_means": 1.9042047976183006e-07
+    },
+    "ar1": {
+      "n_pairs": 9755,
+      "max": 6.537357362322256,
+      "mean_of_patient_means": 1.4505363155752304
+    },
+    "ar1_mc_noise": {
+      "n_values": 6864,
+      "mean_abs": 0.003241012686808357,
+      "p95_abs": 0.012633093175645609
+    }
+  },
+  "adni_minus": {
+    "trace": {
+      "n_pairs": 25407,
+      "max": 6.351910997182131e-08,
+      "mean_of_patient_means": 1.0932664975557557e-08
+    },
+    "direct": {
+      "n_pairs": 25407,
+      "max": 8.594361133873463e-08,
+      "mean_of_patient_means": 1.193184006729349e-08
+    },
+    "chain": {
+      "n_pairs": 25407,
+      "max": 1.0051007848232985e-07,
+      "mean_of_patient_means": 1.4677074710024339e-08
+    },
+    "fixed_first": {
+      "n_pairs": 25407,
+      "max": 1.0446819942444563e-07,
+      "mean_of_patient_means": 1.3512983281376974e-08
+    },
+    "fixed_last": {
+      "n_pairs": 25407,
+      "max": 9.237555786967278e-08,
+      "mean_of_patient_means": 1.324420544411023e-08
+    },
+    "population": {
+      "n_pairs": 25407,
+      "max": 7.048697270306548e-08,
+      "mean_of_patient_means": 1.0966627773445149e-08
+    },
+    "path_dep": {
+      "n_pairs": 25407,
+      "max": 4.309506039135158e-06,
+      "mean_of_patient_means": 4.457260266812919e-07
+    },
+    "ar1": {
+      "n_pairs": 21398,
+      "max": 10.866874333370813,
+      "mean_of_patient_means": 2.0214488045674393
+    },
+    "ar1_mc_noise": {
+      "n_values": 29169,
+      "mean_abs": 0.006991512495823335,
+      "p95_abs": 0.03865156032847541
+    }
+  }
+}

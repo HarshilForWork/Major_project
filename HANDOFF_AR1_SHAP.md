@@ -18,7 +18,8 @@ session, can pick up with full context.
 
 > **Update 11 Oct 2026: read §16 first.** The core AR(1)-SHAP idea turned out to be already
 > published (DynSHAP, Sep 2026). §16 records the novelty re-check, the rejected directions, and the
-> new "expected vs new" SHAP direction the project has landed on.
+> new "expected vs new" SHAP direction. §16.7 assesses that direction as workshop-level as it
+> stands, not journal-ready, so the novelty question is still **open**.
 
 > **For Claude Code:** read this file, then `CLAUDE.md` (repo rules), then `docs/ar1_shap.md`
 > (method + results). For the ADNI cohort, read §13 of this file and
@@ -939,7 +940,82 @@ expected/new split**.
 Not opened during the search: Michiels et al., *DSS* 2024, and the full text of Amoukou et al.,
 AISTATS 2022.
 
-### 16.7 Next steps
+### 16.7 Publishability assessment of "expected vs new" SHAP (11 Oct 2026)
+
+A dedicated search judged whether the §16.3 idea is journal-worthy. **Verdict: not journal-ready
+as it stands; workshop-level now.** The team's position is that workshop-level is not good
+enough, so treat this idea as **unconfirmed** until the gaps below are closed or a better idea is
+found.
+
+**Novelty:** partial, leaning new. No paper does a per-feature, per-visit split of SHAP credit
+into "expected from the patient's own history" and "new at this visit". Close precedents a
+reviewer will cite:
+
+- **Janzing et al., "Quantifying intrinsic causal contributions"** (AISTATS 2024,
+  arXiv:2007.00714). An inherited-vs-new split shared out with Shapley, but global (variance or
+  entropy) and causal-graph based. **This is the main threat.**
+- **Budhathoki et al.** (ICML 2022). Local Shapley over noise terms, for outlier scores.
+- **Asymmetric Shapley Values** (Frye et al., NeurIPS 2020, arXiv:1910.06358). With a
+  "history first" order, the current feature gets only its innovation. The paper must argue why
+  keeping the expected part attached to feature j is better.
+- **Causal Shapley Values** (Heskes et al., NeurIPS 2020). Direct/indirect split.
+- **Michiels, De Vos & Suykens** (arXiv:2306.10880). Interventional + dependent split of
+  conditional SHAP.
+- **Nowcasting:** no Shapley/ML version of the Bańbura–Modugno news decomposition was found
+  (closest: Hopp, arXiv:2203.11872). This is a possible selling point.
+
+**Technical issue:** the symmetric Owen split inside {P_j, I_j} is not the same as ordered
+"news" (history first) for non-linear models such as XGBoost. Either justify the symmetric
+choice or report both.
+
+**Rough acceptance odds (judgement, not measured):**
+
+| Venue | As is | With the package below |
+|---|---|---|
+| Workshop / ML4H findings | 50–65% | — |
+| JBI / AI in Medicine / IEEE JBHI | 10–20% | 40–55% |
+| NeurIPS / ICML main track | <5% | <5% |
+
+For calibration, DynSHAP (Liò's Cambridge group) itself landed as a NeurIPS 2026 *workshop*
+poster, and DeltaSHAP as an ICML 2025 workshop paper.
+
+**Three biggest rejection risks:**
+
+1. **"Incremental, with no comparison to close prior work."** Asymmetric Shapley, Causal
+   Shapley, `shapr` conditional SHAP and a DynSHAP-style baseline must be *run*, not just cited.
+2. **No evidence the method recovers the correct answer.** The "no synthetic data" rule is
+   largely self-imposed. Every close competitor (Aas et al., DynSHAP, FIT, Budhathoki) validates
+   on simulated ground truth, and journals do not frown on it for a new attribution method.
+   - If the rule stays, the minimum substitute is a **"real data, known model" test**: explain a
+     linear or shallow-tree model fitted on real PPMI/ADNI data, where the true expected/new
+     values can be computed exactly, and show the estimator recovers them.
+   - Also report held-out calibration of the history model.
+   - Deletion/insertion faithfulness metrics will probably favour plain TreeSHAP (as in DynSHAP;
+     see Chen et al., arXiv:2006.16234). Say so up front.
+3. **The explained models.** At PPMI 0.68, frame results strictly as explaining the model, not
+   the disease. At ADNI 0.98, reviewers will suspect leakage, because MMSE and FAQ inform the
+   clinical diagnosis. Justify the CDR-only ban or tighten it.
+
+**Minimum package for a journal submission:**
+
+- Formal proofs: exactness, the linear news identity, the reduction cases, the stability bound.
+- Head-to-head baselines: TreeSHAP (interventional and path-dependent), `shapr`
+  Gaussian/copula, Asymmetric Shapley with time order, DynSHAP-style, and TimeSHAP/WindowSHAP
+  where applicable.
+- The known-model recovery test (above).
+- The §16.4 real-data checks, reported with confidence intervals.
+- Improve or justify the PPMI model, and audit ADNI for leakage.
+- Optional but valuable: 3–5 neurologists rating a sample of explanations.
+
+**Venue fit if pursued:** JBI (best fit; see WindowSHAP, JBI 2023, which was real-data-only but
+had strong baselines), AI in Medicine, IEEE JBHI/TBME (see IT-SHAP, TBME 2025), ML4H/CHIL.
+npj Digital Medicine and JAMIA would expect clinician evidence.
+
+**Status: open.** The team intends to keep searching for a stronger novelty angle with other
+research tools. Anyone continuing should start from §16.1–16.2 (what is already published or
+rejected) and this section, so they don't repeat the same searches.
+
+### 16.8 Next steps
 
 1. Write a one-page proposal from §16.3–16.4 for the guide.
 2. Add a DynSHAP-style baseline to the existing evaluation scripts.

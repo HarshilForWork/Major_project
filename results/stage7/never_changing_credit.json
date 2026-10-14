@@ -1,0 +1,290 @@
+{
+  "ppmi": {
+    "trace": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 88
+      },
+      "max_abs": 0.0,
+      "patients": 88
+    },
+    "chain": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 88
+      },
+      "max_abs": 0.0,
+      "patients": 88
+    },
+    "direct": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 88
+      },
+      "max_abs": 0.0,
+      "patients": 88
+    },
+    "fixed_first": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 88
+      },
+      "max_abs": 0.0,
+      "patients": 88
+    },
+    "fixed_last": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 88
+      },
+      "max_abs": 0.0,
+      "patients": 88
+    },
+    "population": {
+      "share": {
+        "mean": 0.028825476229219434,
+        "lo": 0.02514570789365261,
+        "hi": 0.03299729424583969,
+        "n_patients": 88
+      },
+      "max_abs": 0.4347584067261778,
+      "patients": 88
+    },
+    "path_dep": {
+      "share": {
+        "mean": 0.029368015953381968,
+        "lo": 0.02570490259095095,
+        "hi": 0.033490803216541694,
+        "n_patients": 88
+      },
+      "max_abs": 0.4084112048149109,
+      "patients": 88
+    }
+  },
+  "adni_minus": {
+    "trace": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "chain": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "direct": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "fixed_first": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "fixed_last": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "population": {
+      "share": {
+        "mean": 0.028583059668128342,
+        "lo": 0.02670177809907075,
+        "hi": 0.030759318365580504,
+        "n_patients": 475
+      },
+      "max_abs": 0.45501778661692527,
+      "patients": 475
+    },
+    "path_dep": {
+      "share": {
+        "mean": 0.023204489879702268,
+        "lo": 0.021958234161457143,
+        "hi": 0.024646099348993675,
+        "n_patients": 475
+      },
+      "max_abs": 0.34520038962364197,
+      "patients": 475
+    }
+  },
+  "adni_minus_lm": {
+    "trace": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "chain": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "direct": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "fixed_first": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "fixed_last": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "population": {
+      "share": {
+        "mean": 0.03333828888307297,
+        "lo": 0.03158375660649158,
+        "hi": 0.03519408639008894,
+        "n_patients": 475
+      },
+      "max_abs": 0.5491263638962991,
+      "patients": 475
+    },
+    "path_dep": {
+      "share": {
+        "mean": 0.02571749220945333,
+        "lo": 0.024451482238051925,
+        "hi": 0.027139976699640484,
+        "n_patients": 475
+      },
+      "max_abs": 0.4535093605518341,
+      "patients": 475
+    }
+  },
+  "adni_minus2": {
+    "trace": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "chain": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "direct": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "fixed_first": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "fixed_last": {
+      "share": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 475
+      },
+      "max_abs": 0.0,
+      "patients": 475
+    },
+    "population": {
+      "share": {
+        "mean": 0.0399418453119971,
+        "lo": 0.03829980347459606,
+        "hi": 0.04161131288766168,
+        "n_patients": 475
+      },
+      "max_abs": 0.5634437530795112,
+      "patients": 475
+    },
+    "path_dep": {
+      "share": {
+        "mean": 0.031518127430034314,
+        "lo": 0.03016709259451416,
+        "hi": 0.033024400710961535,
+        "n_patients": 475
+      },
+      "max_abs": 0.5413767099380493,
+      "patients": 475
+    }
+  }
+}

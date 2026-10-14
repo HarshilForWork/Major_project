@@ -9,6 +9,10 @@ TRACE-PD predicts a Parkinson's patient's motor subtype (TD / PIGD / Indetermina
 classifier: conformal confidence sets, a longitudinal patient tracker, a 12-month
 transition-risk model, and FCX (Formula-Coordinate Explanations).
 
+**TRACE (current work, Oct 2026):** follow `docs/TRACE_BRIEF.md` stage by stage and log in
+`results/PROGRESS.md`. Its hard rules (no synthetic data, locked splits read-only, gates in Stage 3)
+override anything below for TRACE work.
+
 **Start with `HANDOFF_AR1_SHAP.md`** (1 Oct 2026): the AR(1)-SHAP explainability framework, its
 results, and the future-scope list. `README.md` is the authoritative project document (data, label, decision log, results,
 limitations). `HANDOFF_README.md` is an earlier handover whose numbers are **stale** — a

@@ -1,0 +1,224 @@
+{
+  "model": "adni_minus",
+  "feature_groups_status": "DRAFT (not yet confirmed by the user)",
+  "flips": {
+    "n_model_flips": 1046,
+    "n_up": 476,
+    "n_down": 570,
+    "label_pairs_both_labelled": 496,
+    "label_flips": 1,
+    "label_flips_also_model_flips": 0,
+    "mean_share_by_feature": {
+      "HEIGHT_CM": 0.18922502553892007,
+      "LOGMEM_DELAYED": 0.18333279225350146,
+      "CATEGORY_FLUENCY_ANIMALS": 0.1448575039329913,
+      "NPI_TOTAL": 0.09860033690135427,
+      "TRAILS_B_SEC": 0.06371209836151975,
+      "LOGMEM_IMMEDIATE": 0.06316214252710889,
+      "BOSTON_NAMING": 0.05706221336515167,
+      "WEIGHT_KG": 0.0431131903907886,
+      "GDS_TOTAL": 0.0395151068338992,
+      "TRAILS_A_SEC": 0.029267323869761632,
+      "ECOG_PARTNER_TOTAL": 0.020511807583949736,
+      "PULSE": 0.01610353858428943,
+      "DIGIT_SPAN": 0.013504929396431954,
+      "BP_SYSTOLIC": 0.009749084941242808,
+      "MOCA_TOTAL": 0.009471810885651003,
+      "BP_DIASTOLIC": 0.008419844213135255,
+      "AGE_AT_VISIT": 0.00684295331621729,
+      "ECOG_PATIENT_TOTAL": 0.0035482971040857363,
+      "EDUCATION_YEARS": 0.0,
+      "HANDED": 0.0,
+      "SEX": 0.0
+    },
+    "mean_share_by_group": {
+      "demographic_static": 0.0,
+      "time": 0.00684295331621729,
+      "vitals_body": 0.2666106836683762,
+      "mood_behaviour": 0.13811544373525342,
+      "cognitive_tests": 0.5643708145921176,
+      "function_daily_living": 0.02406010468803547
+    },
+    "mean_signed_credit_up_by_group": {
+      "demographic_static": 0.0,
+      "time": 0.010780383393272457,
+      "vitals_body": 1.6151665454301947,
+      "mood_behaviour": 0.36333083230680624,
+      "cognitive_tests": 2.9889317232314654,
+      "function_daily_living": 0.12196501519854736
+    },
+    "mean_signed_credit_down_by_group": {
+      "demographic_static": 0.0,
+      "time": 0.011588334324367195,
+      "vitals_body": -1.7826669189464694,
+      "mood_behaviour": -0.24302237684180802,
+      "cognitive_tests": -3.0953821156439765,
+      "function_daily_living": -0.10096816536562926
+    }
+  },
+  "measurement": {
+    "share_abs_u_from_missingness_differences": 0.8843333092132587,
+    "note": "share of sum |u_j(t)| contributed by comparisons where feature j's recorded/missing status differs (the two parts are not sign-separated, so the |.| shares are indicative)",
+    "by_phase": {
+      "ADNI1": {
+        "share": 0.8733328376633891,
+        "visits": 1262
+      },
+      "ADNI2": {
+        "share": 0.9181700333391519,
+        "visits": 2067
+      },
+      "ADNI3": {
+        "share": 0.8428199809040173,
+        "visits": 673
+      },
+      "ADNI4": {
+        "share": 0.8188394396852433,
+        "visits": 318
+      },
+      "ADNIGO": {
+        "share": 0.8864962910079978,
+        "visits": 164
+      }
+    }
+  },
+  "within_between": {
+    "identity_max_error": 5.144777226462338e-08,
+    "identity_tolerance": 1e-05,
+    "identity_pass": true,
+    "share_within": 0.49266476137117265,
+    "by_feature": {
+      "LOGMEM_DELAYED": {
+        "mean_abs_within_u": 0.730922674033849,
+        "mean_abs_between_b": 0.7312084299168908,
+        "within_patient_sd_of_b": 0.15733829474014197
+      },
+      "HEIGHT_CM": {
+        "mean_abs_within_u": 0.6049100700591815,
+        "mean_abs_between_b": 0.4905349859311812,
+        "within_patient_sd_of_b": 0.10819962589263002
+      },
+      "CATEGORY_FLUENCY_ANIMALS": {
+        "mean_abs_within_u": 0.42561534635101866,
+        "mean_abs_between_b": 0.37323292988106155,
+        "within_patient_sd_of_b": 0.10675180097459236
+      },
+      "NPI_TOTAL": {
+        "mean_abs_within_u": 0.42377622334725484,
+        "mean_abs_between_b": 0.3074654528172466,
+        "within_patient_sd_of_b": 0.10878381115800166
+      },
+      "TRAILS_B_SEC": {
+        "mean_abs_within_u": 0.3684703791807514,
+        "mean_abs_between_b": 0.35600763810205366,
+        "within_patient_sd_of_b": 0.07976385357796177
+      },
+      "MOCA_TOTAL": {
+        "mean_abs_within_u": 0.18412175444550738,
+        "mean_abs_between_b": 0.3529603188520502,
+        "within_patient_sd_of_b": 0.05002694263834836
+      },
+      "ECOG_PARTNER_TOTAL": {
+        "mean_abs_within_u": 0.19329208828793742,
+        "mean_abs_between_b": 0.2418626916370394,
+        "within_patient_sd_of_b": 0.04509391341543276
+      },
+      "LOGMEM_IMMEDIATE": {
+        "mean_abs_within_u": 0.18468988519136934,
+        "mean_abs_between_b": 0.19098553842766314,
+        "within_patient_sd_of_b": 0.056175632991404226
+      },
+      "BOSTON_NAMING": {
+        "mean_abs_within_u": 0.1430281058148172,
+        "mean_abs_between_b": 0.15399052709694563,
+        "within_patient_sd_of_b": 0.03539684184633276
+      },
+      "WEIGHT_KG": {
+        "mean_abs_within_u": 0.157938169847926,
+        "mean_abs_between_b": 0.1281791675552049,
+        "within_patient_sd_of_b": 0.041920052473293785
+      },
+      "GDS_TOTAL": {
+        "mean_abs_within_u": 0.1564562310884038,
+        "mean_abs_between_b": 0.11052035788518157,
+        "within_patient_sd_of_b": 0.03236920806745952
+      },
+      "TRAILS_A_SEC": {
+        "mean_abs_within_u": 0.1118229500814782,
+        "mean_abs_between_b": 0.10104521690926882,
+        "within_patient_sd_of_b": 0.032858803776428774
+      },
+      "DIGIT_SPAN": {
+        "mean_abs_within_u": 0.05618104715740324,
+        "mean_abs_between_b": 0.09598361522312766,
+        "within_patient_sd_of_b": 0.02015059700795674
+      },
+      "AGE_AT_VISIT": {
+        "mean_abs_within_u": 0.04699595876130031,
+        "mean_abs_between_b": 0.10314638595224584,
+        "within_patient_sd_of_b": 0.08214563373646999
+      },
+      "ECOG_PATIENT_TOTAL": {
+        "mean_abs_within_u": 0.05732655228831193,
+        "mean_abs_between_b": 0.06628694070740332,
+        "within_patient_sd_of_b": 0.007978074098642523
+      },
+      "SEX": {
+        "mean_abs_within_u": 0.0,
+        "mean_abs_between_b": 0.10318491270257048,
+        "within_patient_sd_of_b": 0.016628196059966124
+      },
+      "PULSE": {
+        "mean_abs_within_u": 0.05554520165065662,
+        "mean_abs_between_b": 0.04629579439494003,
+        "within_patient_sd_of_b": 0.01776163321601737
+      },
+      "EDUCATION_YEARS": {
+        "mean_abs_within_u": 0.0,
+        "mean_abs_between_b": 0.06775205329701857,
+        "within_patient_sd_of_b": 0.02279862446790907
+      },
+      "BP_SYSTOLIC": {
+        "mean_abs_within_u": 0.03879990453577078,
+        "mean_abs_between_b": 0.02511542549411064,
+        "within_patient_sd_of_b": 0.017596480694548496
+      },
+      "BP_DIASTOLIC": {
+        "mean_abs_within_u": 0.029171486322502528,
+        "mean_abs_between_b": 0.02053424352566899,
+        "within_patient_sd_of_b": 0.016767659755546876
+      },
+      "HANDED": {
+        "mean_abs_within_u": 0.0,
+        "mean_abs_between_b": 0.02096143342970185,
+        "within_patient_sd_of_b": 0.003316268724508891
+      }
+    },
+    "by_group": {
+      "demographic_static": {
+        "mean_abs_within_u": 0.0,
+        "mean_abs_between_b": 0.19189839942929088
+      },
+      "time": {
+        "mean_abs_within_u": 0.04699595876130031,
+        "mean_abs_between_b": 0.10314638595224584
+      },
+      "vitals_body": {
+        "mean_abs_within_u": 0.8863648324160375,
+        "mean_abs_between_b": 0.7106596169011058
+      },
+      "mood_behaviour": {
+        "mean_abs_within_u": 0.5802324544356586,
+        "mean_abs_between_b": 0.41798581070242813
+      },
+      "cognitive_tests": {
+        "mean_abs_within_u": 2.204852142256194,
+        "mean_abs_between_b": 2.3554142144090617
+      },
+      "function_daily_living": {
+        "mean_abs_within_u": 0.2506186405762494,
+        "mean_abs_between_b": 0.3081496323444427
+      }
+    }
+  }
+}

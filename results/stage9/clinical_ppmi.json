@@ -1,0 +1,233 @@
+{
+  "model": "ppmi",
+  "feature_groups_status": "DRAFT (not yet confirmed by the user)",
+  "flips": {
+    "n_model_flips": 233,
+    "n_up": 150,
+    "n_down": 83,
+    "label_pairs_both_labelled": 799,
+    "label_flips": 99,
+    "label_flips_also_model_flips": 18,
+    "mean_share_by_feature": {
+      "NP2RISE": 0.1055766840613552,
+      "MCATOT": 0.10079889464127861,
+      "LEDD_TOTAL_MG": 0.09736314547397727,
+      "STAI_TOTAL": 0.05559998857524385,
+      "YRS_SINCE_DIAGNOSIS": 0.055299460824887375,
+      "NP2SPCH": 0.05391176646005629,
+      "SCOPA_AUT_TOTAL": 0.04568248185992593,
+      "ESS_TOTAL": 0.044864807989828684,
+      "YRS_SINCE_SYMPTOM_ONSET": 0.04481215786251909,
+      "NP1RTOT": 0.043917224407208445,
+      "NP2HYGN": 0.043578688928313306,
+      "NP2EAT": 0.04205199016040409,
+      "NP2TURN": 0.0381518279505624,
+      "NP1PTOT": 0.036288564945091986,
+      "N_CONMEDS": 0.03256175372040989,
+      "GDS_TOTAL": 0.03000428531646457,
+      "NP2DRES": 0.021805683792605998,
+      "NP2HWRT": 0.021407162275499634,
+      "AGE_AT_VISIT": 0.02078714410324367,
+      "RBDSQ_TOTAL": 0.019628247094539173,
+      "PDTRTMNT": 0.01348718133085579,
+      "NP2HOBB": 0.012980237010218125,
+      "NP2SALV": 0.01043199988532416,
+      "NP2SWAL": 0.00900862133018645,
+      "HANDED": 0.0,
+      "SEX": 0.0
+    },
+    "mean_share_by_group": {
+      "demographic_static": 0.0,
+      "time": 0.12089876279065015,
+      "medication": 0.14341208052524293,
+      "motor_daily_living": 0.3589046618545257,
+      "non_motor_questionnaires": 0.27598560018830265,
+      "cognition": 0.10079889464127861
+    },
+    "mean_signed_credit_up_by_group": {
+      "demographic_static": 0.0,
+      "time": 0.31077965127247553,
+      "medication": 0.29804190892859994,
+      "motor_daily_living": 0.6607320062835417,
+      "non_motor_questionnaires": 0.32407252660285446,
+      "cognition": 0.0747047989744429
+    },
+    "mean_signed_credit_down_by_group": {
+      "demographic_static": 0.0,
+      "time": -0.22148237452264335,
+      "medication": -0.1245187943422073,
+      "motor_daily_living": -0.5788739111646157,
+      "non_motor_questionnaires": -0.28935964986995977,
+      "cognition": -0.12834777884995616
+    }
+  },
+  "measurement": {
+    "share_abs_u_from_missingness_differences": 0.44473445817051077,
+    "note": "share of sum |u_j(t)| contributed by comparisons where feature j's recorded/missing status differs (the two parts are not sign-separated, so the |.| shares are indicative)",
+    "by_phase": {}
+  },
+  "within_between": {
+    "identity_max_error": 3.58040432857365e-08,
+    "identity_tolerance": 1e-05,
+    "identity_pass": true,
+    "share_within": 0.5390453140325687,
+    "by_feature": {
+      "LEDD_TOTAL_MG": {
+        "mean_abs_within_u": 0.2900779139728837,
+        "mean_abs_between_b": 0.19414787710250545,
+        "within_patient_sd_of_b": 0.05931828831596211
+      },
+      "YRS_SINCE_DIAGNOSIS": {
+        "mean_abs_within_u": 0.2813225958746542,
+        "mean_abs_between_b": 0.1166816854506847,
+        "within_patient_sd_of_b": 0.03374320578296078
+      },
+      "NP2RISE": {
+        "mean_abs_within_u": 0.22272617189343083,
+        "mean_abs_between_b": 0.15988782634682927,
+        "within_patient_sd_of_b": 0.029150650292370205
+      },
+      "SEX": {
+        "mean_abs_within_u": 0.0,
+        "mean_abs_between_b": 0.35022748591096725,
+        "within_patient_sd_of_b": 0.051540425925012685
+      },
+      "YRS_SINCE_SYMPTOM_ONSET": {
+        "mean_abs_within_u": 0.17045958825825272,
+        "mean_abs_between_b": 0.09677212193928116,
+        "within_patient_sd_of_b": 0.0376881807246171
+      },
+      "NP2TURN": {
+        "mean_abs_within_u": 0.1411923065657486,
+        "mean_abs_between_b": 0.08590557366533087,
+        "within_patient_sd_of_b": 0.022629422793481162
+      },
+      "N_CONMEDS": {
+        "mean_abs_within_u": 0.11669157550441679,
+        "mean_abs_between_b": 0.09423490138665619,
+        "within_patient_sd_of_b": 0.05852832517504785
+      },
+      "MCATOT": {
+        "mean_abs_within_u": 0.14912109140065063,
+        "mean_abs_between_b": 0.05729425513425279,
+        "within_patient_sd_of_b": 0.033752404179564946
+      },
+      "NP2SPCH": {
+        "mean_abs_within_u": 0.09437289603560535,
+        "mean_abs_between_b": 0.10677906928325652,
+        "within_patient_sd_of_b": 0.037705972545880706
+      },
+      "PDTRTMNT": {
+        "mean_abs_within_u": 0.09942755575257994,
+        "mean_abs_between_b": 0.09731163112804525,
+        "within_patient_sd_of_b": 0.030552016617866787
+      },
+      "NP2EAT": {
+        "mean_abs_within_u": 0.10188048399200166,
+        "mean_abs_between_b": 0.08735098455292575,
+        "within_patient_sd_of_b": 0.030620433551238693
+      },
+      "NP1PTOT": {
+        "mean_abs_within_u": 0.11384139097784968,
+        "mean_abs_between_b": 0.0685078334073808,
+        "within_patient_sd_of_b": 0.02032629983146503
+      },
+      "NP2HWRT": {
+        "mean_abs_within_u": 0.09130708438477658,
+        "mean_abs_between_b": 0.06222363374034078,
+        "within_patient_sd_of_b": 0.02407091863968508
+      },
+      "AGE_AT_VISIT": {
+        "mean_abs_within_u": 0.07297626516296417,
+        "mean_abs_between_b": 0.07419224728304714,
+        "within_patient_sd_of_b": 0.05653863014778089
+      },
+      "STAI_TOTAL": {
+        "mean_abs_within_u": 0.08874282782448188,
+        "mean_abs_between_b": 0.05819691093234207,
+        "within_patient_sd_of_b": 0.023015306151034788
+      },
+      "NP2HYGN": {
+        "mean_abs_within_u": 0.07450285890287996,
+        "mean_abs_between_b": 0.07239483719944233,
+        "within_patient_sd_of_b": 0.02596819035966363
+      },
+      "NP1RTOT": {
+        "mean_abs_within_u": 0.08525536443308022,
+        "mean_abs_between_b": 0.055989487956815506,
+        "within_patient_sd_of_b": 0.031167560921093792
+      },
+      "ESS_TOTAL": {
+        "mean_abs_within_u": 0.06713412651904399,
+        "mean_abs_between_b": 0.05834941066283119,
+        "within_patient_sd_of_b": 0.023376117893634616
+      },
+      "SCOPA_AUT_TOTAL": {
+        "mean_abs_within_u": 0.06492934898596078,
+        "mean_abs_between_b": 0.04460179713369818,
+        "within_patient_sd_of_b": 0.01996830256021299
+      },
+      "NP2DRES": {
+        "mean_abs_within_u": 0.05739161540596633,
+        "mean_abs_between_b": 0.04888235390859581,
+        "within_patient_sd_of_b": 0.013588194121961742
+      },
+      "GDS_TOTAL": {
+        "mean_abs_within_u": 0.054676996170378016,
+        "mean_abs_between_b": 0.041969538820382915,
+        "within_patient_sd_of_b": 0.02109658005884614
+      },
+      "HANDED": {
+        "mean_abs_within_u": 0.0,
+        "mean_abs_between_b": 0.07786628356609017,
+        "within_patient_sd_of_b": 0.01857955147838432
+      },
+      "NP2HOBB": {
+        "mean_abs_within_u": 0.041648228501002964,
+        "mean_abs_between_b": 0.027681987362174643,
+        "within_patient_sd_of_b": 0.011639396082803018
+      },
+      "RBDSQ_TOTAL": {
+        "mean_abs_within_u": 0.03260409425103256,
+        "mean_abs_between_b": 0.01993250197435942,
+        "within_patient_sd_of_b": 0.014311740766078695
+      },
+      "NP2SWAL": {
+        "mean_abs_within_u": 0.030574311875465107,
+        "mean_abs_between_b": 0.01700560037562687,
+        "within_patient_sd_of_b": 0.011808566151790987
+      },
+      "NP2SALV": {
+        "mean_abs_within_u": 0.020283847832861853,
+        "mean_abs_between_b": 0.017434654705033702,
+        "within_patient_sd_of_b": 0.014995916796266858
+      }
+    },
+    "by_group": {
+      "demographic_static": {
+        "mean_abs_within_u": 0.0,
+        "mean_abs_between_b": 0.4280937694770574
+      },
+      "time": {
+        "mean_abs_within_u": 0.5247584492958711,
+        "mean_abs_between_b": 0.287646054673013
+      },
+      "medication": {
+        "mean_abs_within_u": 0.5061970452298804,
+        "mean_abs_between_b": 0.38569440961720686
+      },
+      "motor_daily_living": {
+        "mean_abs_within_u": 0.8758798053897392,
+        "mean_abs_between_b": 0.6855465211395565
+      },
+      "non_motor_questionnaires": {
+        "mean_abs_within_u": 0.5071841491618271,
+        "mean_abs_between_b": 0.34754748088781007
+      },
+      "cognition": {
+        "mean_abs_within_u": 0.14912109140065063,
+        "mean_abs_between_b": 0.05729425513425279
+      }
+    }
+  }
+}

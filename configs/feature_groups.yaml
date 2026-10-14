@@ -1,0 +1,43 @@
+# TRACE feature groups (brief Stage 9.1). STATUS: DRAFT, awaiting the user's confirmation.
+# Groups are per MODEL, because the ADNI variants have different feature sets.
+# Time/clock features are their own group (user, 14 Oct 2026). Stage 9 reports per-feature
+# numbers as well as per-group numbers.
+# Every model's groups must cover exactly that model's features (checked in code).
+status: draft
+
+ppmi:
+  demographic_static: [SEX, HANDED]
+  time: [AGE_AT_VISIT, YRS_SINCE_DIAGNOSIS, YRS_SINCE_SYMPTOM_ONSET]
+  medication: [LEDD_TOTAL_MG, PDTRTMNT, N_CONMEDS]
+  motor_daily_living: [NP2DRES, NP2EAT, NP2HOBB, NP2HWRT, NP2HYGN, NP2RISE, NP2SALV, NP2SPCH, NP2SWAL, NP2TURN]
+  non_motor_questionnaires: [NP1PTOT, NP1RTOT, ESS_TOTAL, GDS_TOTAL, RBDSQ_TOTAL, SCOPA_AUT_TOTAL, STAI_TOTAL]
+  cognition: [MCATOT]
+
+_adni_common: &adni_common
+  demographic_static: [SEX, HANDED, EDUCATION_YEARS]
+  time: [AGE_AT_VISIT]
+  vitals_body: [BP_SYSTOLIC, BP_DIASTOLIC, PULSE, HEIGHT_CM, WEIGHT_KG]
+  mood_behaviour: [GDS_TOTAL, NPI_TOTAL]
+
+adni_full:            # all 23 features (sensitivity)
+  <<: *adni_common
+  cognitive_tests: [MMSE_TOTAL, MOCA_TOTAL, LOGMEM_IMMEDIATE, LOGMEM_DELAYED, BOSTON_NAMING,
+                    CATEGORY_FLUENCY_ANIMALS, DIGIT_SPAN, TRAILS_A_SEC, TRAILS_B_SEC]
+  function_daily_living: [FAQ_TOTAL, ECOG_PATIENT_TOTAL, ECOG_PARTNER_TOTAL]
+
+adni_minus:           # PRIMARY: no MMSE_TOTAL, FAQ_TOTAL
+  <<: *adni_common
+  cognitive_tests: [MOCA_TOTAL, LOGMEM_IMMEDIATE, LOGMEM_DELAYED, BOSTON_NAMING,
+                    CATEGORY_FLUENCY_ANIMALS, DIGIT_SPAN, TRAILS_A_SEC, TRAILS_B_SEC]
+  function_daily_living: [ECOG_PATIENT_TOTAL, ECOG_PARTNER_TOTAL]
+
+adni_minus_lm:        # also no LOGMEM_DELAYED
+  <<: *adni_common
+  cognitive_tests: [MOCA_TOTAL, LOGMEM_IMMEDIATE, BOSTON_NAMING,
+                    CATEGORY_FLUENCY_ANIMALS, DIGIT_SPAN, TRAILS_A_SEC, TRAILS_B_SEC]
+  function_daily_living: [ECOG_PATIENT_TOTAL, ECOG_PARTNER_TOTAL]
+
+adni_minus2:          # also no LOGMEM_DELAYED, LOGMEM_IMMEDIATE
+  <<: *adni_common
+  cognitive_tests: [MOCA_TOTAL, BOSTON_NAMING, CATEGORY_FLUENCY_ANIMALS, DIGIT_SPAN, TRAILS_A_SEC, TRAILS_B_SEC]
+  function_daily_living: [ECOG_PATIENT_TOTAL, ECOG_PARTNER_TOTAL]

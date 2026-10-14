@@ -1,0 +1,27 @@
+{
+  "G4_pairs": 2000,
+  "G4_eligible_pairs": 2192,
+  "G4_pairs_by_nan_category": {
+    "nan_ref": 504,
+    "nan_expl": 331,
+    "nan_both": 818,
+    "no_nan": 572
+  },
+  "G4_available_by_nan_category": {
+    "nan_ref": 504,
+    "nan_expl": 331,
+    "nan_both": 964,
+    "no_nan": 618
+  },
+  "G4_k_median": 12.0,
+  "G4_k_max": 13,
+  "G4_max": 1.507892991137183e-06,
+  "G4_max_by_nan_category": {
+    "nan_ref": 1.507892991137183e-06,
+    "nan_expl": 1.4499362026576534e-06,
+    "nan_both": 1.4499362026576534e-06,
+    "no_nan": 1.2603122740983963e-06
+  },
+  "G4_antisymmetry_max": 0.0,
+  "note": "SUPPLEMENTARY: max_k=13 (brief specifies 12; PPMI has only 1488 pairs with k<=12). Not the official gate."
+}

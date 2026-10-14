@@ -1,0 +1,493 @@
+{
+  "model": "adni_minus_lm",
+  "n_patients": 439,
+  "R_bound": 26.362741331999988,
+  "bound_max_ratio": 0.01747218958965946,
+  "bound_violations": 0,
+  "first": {
+    "trace": {
+      "max": {
+        "mean": 0.041386664850375246,
+        "lo": 0.03829466757585151,
+        "hi": 0.04471562627878027,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.00725040990971605,
+        "lo": 0.006760705227033395,
+        "hi": 0.007755934987152217,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      }
+    },
+    "chain": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.041386664850375246,
+        "lo": 0.03829466757585151,
+        "hi": 0.04471562627878027,
+        "n_patients": 439
+      }
+    },
+    "fixed_first": {
+      "max": {
+        "mean": 0.3264804897185902,
+        "lo": 0.3115555705250831,
+        "hi": 0.34196429386680793,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.054178450091015955,
+        "lo": 0.051765813731665736,
+        "hi": 0.05664308411560265,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": -0.28509382486821494,
+        "lo": -0.29887150456492895,
+        "hi": -0.27186711231912025,
+        "n_patients": 439
+      }
+    },
+    "fixed_last": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.041386664850375246,
+        "lo": 0.03829466757585151,
+        "hi": 0.04471562627878027,
+        "n_patients": 439
+      }
+    },
+    "direct": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.041386664850375246,
+        "lo": 0.03829466757585151,
+        "hi": 0.04471562627878027,
+        "n_patients": 439
+      }
+    },
+    "population": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.041386664850375246,
+        "lo": 0.03829466757585151,
+        "hi": 0.04471562627878027,
+        "n_patients": 439
+      }
+    },
+    "path_dep": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.041386664850375246,
+        "lo": 0.03829466757585151,
+        "hi": 0.04471562627878027,
+        "n_patients": 439
+      }
+    },
+    "ar1": {
+      "max": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      },
+      "mean": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      },
+      "trace_minus_method": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      }
+    }
+  },
+  "intermediate": {
+    "trace": {
+      "max": {
+        "mean": 0.04081004088263715,
+        "lo": 0.03776640702747437,
+        "hi": 0.043939261213019914,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0068195637077340795,
+        "lo": 0.006360540921071356,
+        "hi": 0.007313469562575307,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      }
+    },
+    "chain": {
+      "max": {
+        "mean": 0.15231759973388437,
+        "lo": 0.14349971142169274,
+        "hi": 0.1617206436937627,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.023737638853844285,
+        "lo": 0.02245597513717232,
+        "hi": 0.025105515111681395,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": -0.11150755885124722,
+        "lo": -0.11832475395274555,
+        "hi": -0.1054192004687297,
+        "n_patients": 439
+      }
+    },
+    "fixed_first": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.04081004088263715,
+        "lo": 0.03776640702747437,
+        "hi": 0.043939261213019914,
+        "n_patients": 439
+      }
+    },
+    "fixed_last": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.04081004088263715,
+        "lo": 0.03776640702747437,
+        "hi": 0.043939261213019914,
+        "n_patients": 439
+      }
+    },
+    "direct": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.04081004088263715,
+        "lo": 0.03776640702747437,
+        "hi": 0.043939261213019914,
+        "n_patients": 439
+      }
+    },
+    "population": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.04081004088263715,
+        "lo": 0.03776640702747437,
+        "hi": 0.043939261213019914,
+        "n_patients": 439
+      }
+    },
+    "path_dep": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.04081004088263715,
+        "lo": 0.03776640702747437,
+        "hi": 0.043939261213019914,
+        "n_patients": 439
+      }
+    },
+    "ar1": {
+      "max": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      },
+      "mean": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      },
+      "trace_minus_method": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      }
+    }
+  },
+  "last": {
+    "trace": {
+      "max": {
+        "mean": 0.038839301545921495,
+        "lo": 0.03578782753200266,
+        "hi": 0.042070216359396534,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0065849938407978965,
+        "lo": 0.006122587614257386,
+        "hi": 0.007109128961128199,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      }
+    },
+    "chain": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.038839301545921495,
+        "lo": 0.03578782753200266,
+        "hi": 0.042070216359396534,
+        "n_patients": 439
+      }
+    },
+    "fixed_first": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.038839301545921495,
+        "lo": 0.03578782753200266,
+        "hi": 0.042070216359396534,
+        "n_patients": 439
+      }
+    },
+    "fixed_last": {
+      "max": {
+        "mean": 0.32737947421124336,
+        "lo": 0.3024997405708431,
+        "hi": 0.35269312031827615,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.05342076554477862,
+        "lo": 0.04932899486112317,
+        "hi": 0.05738279082144902,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": -0.2885401726653219,
+        "lo": -0.3119070047802801,
+        "hi": -0.26482235937812165,
+        "n_patients": 439
+      }
+    },
+    "direct": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.038839301545921495,
+        "lo": 0.03578782753200266,
+        "hi": 0.042070216359396534,
+        "n_patients": 439
+      }
+    },
+    "population": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.038839301545921495,
+        "lo": 0.03578782753200266,
+        "hi": 0.042070216359396534,
+        "n_patients": 439
+      }
+    },
+    "path_dep": {
+      "max": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "mean": {
+        "mean": 0.0,
+        "lo": 0.0,
+        "hi": 0.0,
+        "n_patients": 439
+      },
+      "trace_minus_method": {
+        "mean": 0.038839301545921495,
+        "lo": 0.03578782753200266,
+        "hi": 0.042070216359396534,
+        "n_patients": 439
+      }
+    },
+    "ar1": {
+      "max": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      },
+      "mean": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      },
+      "trace_minus_method": {
+        "mean": NaN,
+        "lo": NaN,
+        "hi": NaN,
+        "n_patients": 0
+      }
+    }
+  }
+}

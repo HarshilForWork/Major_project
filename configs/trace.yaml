@@ -1,0 +1,54 @@
+# TRACE run configuration (docs/TRACE_BRIEF.md, Stage 0).
+# Unlike configs/config.yaml (documentation only), this file IS read by the TRACE code.
+
+seeds:
+  global: 2026            # numpy RNG for sampling (G4 pair sample, population background, bootstrap)
+  model: 42               # XGBoost random_state, same as models/backend.py (do not change: keeps the locked models)
+  retrain_seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]   # Stage 4 seed-noise baseline (N = 10)
+
+tolerances:               # Stage 3 gate. Never loosen these to make a check pass (brief rule 10).
+  add_up: 1.0e-5          # G1
+  consistency: 1.0e-5     # G2
+  zero: 1.0e-6            # G3
+  brute_force: 1.0e-5     # G4
+  between_identity: 1.0e-5  # Stage 9.4 extra identity check
+
+g4:
+  min_pairs_per_cohort: 2000
+  max_k: 12               # pairs with at most 12 differing features are brute-forced (2^k hybrids)
+  max_k_overrides:
+    ppmi: 13              # user decision 14 Oct 2026: only 1,488 PPMI pairs have k <= 12
+
+# G1 reference: the exact float64 tree sum (trace_engine.exact_margin), not XGBoost's float32
+# predict; both are reported. Tolerance unchanged. User decision 14 Oct 2026.
+g1_reference: exact_float64
+
+min_visits: 3
+k_values: [1, 2, 3, 4, 5]
+n_bootstrap: 1000
+n_background_population: 500
+faithfulness_eps: 0.05    # PROPOSED (log-odds); kept OPEN by the user (14 Oct 2026); confirm before Stage 6
+
+# Margin (log-odds) decision threshold for model-predicted labels. Both binary models are trained
+# with balanced sample weights and classify with predict() at probability 0.5, i.e. margin 0.0.
+# Accepted by the user, 14 Oct 2026.
+decision_threshold_margin: 0.0
+
+cohorts:
+  ppmi:
+    task: "TD vs PIGD (positive = PIGD)"
+    model: ppmi
+  adni:
+    task: "CN vs Dementia (positive = Dementia)"
+    # User decisions, 14 Oct 2026. Definitions: trace_pd.evaluation.trace_run.MODELS
+    main_model: adni_minus           # M_minus: no MMSE_TOTAL, FAQ_TOTAL (matches pilot and proposal)
+    variants: [adni_minus_lm, adni_minus2]   # M_minus_LM (also no LOGMEM_DELAYED); M_minus2 (no LOGMEM at all)
+    sensitivity_full: adni_full
+  stage_plan:                      # gates on all; Stages 4-9 on primary; 4 and 7 on variants
+    gates: [ppmi, adni_minus, adni_minus_lm, adni_minus2, adni_full]
+    stages_4_to_9: [ppmi, adni_minus]
+    stages_4_and_7_sensitivity: [adni_minus_lm, adni_minus2]
+  visits: all                      # primary; "labelled" (non-missing LABEL only) is a sensitivity run
+
+asymmetric_shapley: skipped        # no implementation in the repo; user decision 14 Oct 2026
+feature_groups: configs/feature_groups.yaml   # DRAFT, per model; awaiting confirmation before Stage 9

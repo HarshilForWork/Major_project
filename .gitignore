@@ -8,6 +8,9 @@ data/interim/*
 models/*
 !models/.gitkeep
 
+# TRACE per-patient arrays (patient-level data; never commit)
+results/cache/
+
 # ---------------------------------------------------------------- python
 __pycache__/
 *.py[cod]
